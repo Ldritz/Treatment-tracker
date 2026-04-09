@@ -3,7 +3,10 @@ import { open, Database } from 'sqlite'
 import path from 'path'
 
 // Database file path
-const dbPath = path.join(process.cwd(), 'database.sqlite')
+// Use /tmp in production (Vercel) since it's the only writable directory
+const dbPath = process.env.NODE_ENV === 'production'
+  ? path.join('/tmp', 'database.sqlite')
+  : path.join(process.cwd(), 'database.sqlite')
 
 // Singleton to reuse database connection
 let dbInstance: Database<sqlite3.Database, sqlite3.Statement> | null = null
