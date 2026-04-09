@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { CAGE_LAYOUT, CageState, CageData } from '@/lib/constants'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 type CageGridProps = {
   selectedCage: CageData | null;
@@ -9,6 +10,7 @@ type CageGridProps = {
 }
 
 export const CageGrid = ({ selectedCage, onSelectCage, completedCages, draftCages = new Set() }: CageGridProps) => {
+  const [activeBlockIndex, setActiveBlockIndex] = useState(selectedCage ? selectedCage.block - 1 : 0);
 
   const getCageState = (block: number, treatment: string): CageState => {
     if (selectedCage?.block === block && selectedCage?.treatment === treatment) {
@@ -37,43 +39,73 @@ export const CageGrid = ({ selectedCage, onSelectCage, completedCages, draftCage
     }
   }
 
+  const currentBlock = CAGE_LAYOUT[activeBlockIndex];
+
+  const handlePrevBlock = () => {
+    setActiveBlockIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  };
+
+  const handleNextBlock = () => {
+    setActiveBlockIndex((prev) => (prev < CAGE_LAYOUT.length - 1 ? prev + 1 : prev));
+  };
+
   return (
-    <div className="bg-white rounded-xl border-2 border-stitch-blue p-4 shadow-sm mb-6 overflow-x-auto">
-      <h3 className="text-xl font-bold text-stitch-blue mb-4 text-center">Facility Layout (27 Cages)</h3>
+    <div className="flex justify-center mb-6">
+      <div className="bg-white rounded-xl border-2 border-stitch-blue p-4 shadow-sm inline-block">
 
-      <div className="flex flex-col md:flex-row gap-6 min-w-max md:min-w-0 justify-center">
-        {CAGE_LAYOUT.map((blockData) => (
-          <div key={`block-${blockData.block}`} className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200 flex-1">
-            <h4 className="font-bold text-center text-gray-700 uppercase tracking-wider text-sm mb-2">
-              Block {blockData.block}
-            </h4>
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={handlePrevBlock}
+            disabled={activeBlockIndex === 0}
+            className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
+            aria-label="Previous Block"
+          >
+            <ChevronLeft className="text-stitch-blue" />
+            <span className="sr-only">back</span>
+          </button>
 
-            <div className="flex flex-col gap-2">
-              {blockData.rows.map((row, rowIndex) => (
-                <div key={`b${blockData.block}-r${rowIndex}`} className="flex gap-2 justify-center">
-                  {row.map((treatment) => {
-                    const state = getCageState(blockData.block, treatment)
-                    return (
-                      <button
-                        key={`${blockData.block}-${treatment}`}
-                        onClick={() => onSelectCage({ block: blockData.block, row: rowIndex + 1, treatment })}
-                        className={`
-                          w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-lg border-2
-                          font-black text-lg transition-all duration-200 shadow-sm
-                          flex items-center justify-center
-                          ${getCageStyle(state)}
-                        `}
-                        aria-label={`Select Block ${blockData.block}, Treatment ${treatment}`}
-                      >
-                        {treatment}
-                      </button>
-                    )
-                  })}
-                </div>
-              ))}
-            </div>
+          <h4 className="font-black text-center text-stitch-blue uppercase tracking-wider text-lg">
+            Block {currentBlock.block}
+          </h4>
+
+          <button
+            onClick={handleNextBlock}
+            disabled={activeBlockIndex === CAGE_LAYOUT.length - 1}
+            className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
+            aria-label="Next Block"
+          >
+            <ChevronRight className="text-stitch-blue" />
+            <span className="sr-only">Next</span>
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex flex-col gap-2">
+            {currentBlock.rows.map((row, rowIndex) => (
+              <div key={`b${currentBlock.block}-r${rowIndex}`} className="flex gap-2 justify-center">
+                {row.map((treatment) => {
+                  const state = getCageState(currentBlock.block, treatment)
+                  return (
+                    <button
+                      key={`${currentBlock.block}-${treatment}`}
+                      onClick={() => onSelectCage({ block: currentBlock.block, row: rowIndex + 1, treatment })}
+                      className={`
+                        w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-lg border-2
+                        font-black text-xl transition-all duration-200 shadow-sm
+                        flex items-center justify-center
+                        ${getCageStyle(state)}
+                      `}
+                      aria-label={`Select Block ${currentBlock.block}, Treatment ${treatment}`}
+                    >
+                      {treatment}
+                    </button>
+                  )
+                })}
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+
       </div>
     </div>
   )

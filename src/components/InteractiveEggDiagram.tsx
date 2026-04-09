@@ -29,18 +29,6 @@ export const InteractiveEggDiagram = ({ onSelectRegion }: DiagramProps) => {
             onClick={() => onSelectRegion('shell')}
           />
 
-          {/* Shell Membrane */}
-          <path
-            id="shell-membrane"
-            d="M150 32 C70 32, 35 150, 35 250 C35 340, 90 368, 150 368 C210 368, 265 340, 265 250 C265 150, 230 32, 150 32 Z"
-            fill="#FAFAFA"
-            stroke="#E0E0E0"
-            strokeWidth="3"
-            strokeDasharray="4,4"
-            className="cursor-pointer hover:fill-gray-100 transition-colors"
-            onClick={() => onSelectRegion('shell')}
-          />
-
           {/* Albumen (White) */}
           <path
             id="albumen"
@@ -48,17 +36,6 @@ export const InteractiveEggDiagram = ({ onSelectRegion }: DiagramProps) => {
             fill="#E3F2FD"
             className="cursor-pointer hover:fill-blue-100 transition-colors"
             onClick={() => onSelectRegion('albumen')}
-          />
-
-          {/* Vitelline Membrane (Outer Yolk Ring) */}
-          <circle
-            id="vitelline-membrane"
-            cx="150"
-            cy="240"
-            r="85"
-            fill="#FFD54F"
-            className="cursor-pointer hover:fill-yellow-300 transition-colors"
-            onClick={() => onSelectRegion('yolk')}
           />
 
           {/* Yolk */}
@@ -86,14 +63,6 @@ export const InteractiveEggDiagram = ({ onSelectRegion }: DiagramProps) => {
             {/* Yolk Pointer */}
             <polyline points="200,200 260,180 275,180" fill="none" stroke="#1A237E" strokeWidth="2" />
             <text x="280" y="185" className="cursor-pointer hover:underline" onClick={() => onSelectRegion('yolk')}>Yolk</text>
-
-            {/* Shell Membrane Pointer */}
-            <polyline points="270,250 295,250 295,270" fill="none" stroke="#1A237E" strokeWidth="2" />
-            <text x="235" y="285" className="cursor-pointer hover:underline text-xs" onClick={() => onSelectRegion('shell')}>Shell Mem</text>
-
-            {/* Vitelline Membrane Pointer */}
-            <polyline points="230,280 260,310 260,325" fill="none" stroke="#1A237E" strokeWidth="2" />
-            <text x="195" y="340" className="cursor-pointer hover:underline text-xs" onClick={() => onSelectRegion('yolk')}>Vitelline Memb</text>
 
           </g>
         </svg>
