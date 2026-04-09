@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --color-stitch-blue: #1A237E;
+  --color-hibiscus-pink: #FF4081;
+  --color-baby-blue: #E3F2FD;
+  --color-mint-green: #A7F3D0;
+  --color-completed-text: #064E3B; /* Darker green for contrast on mint green */
+  --color-pending-bg: #DBEAFE;
+  --color-pending-text: #1E3A8A;
+
+  --font-nunito: "Nunito", sans-serif;
+  --font-roboto-mono: "Roboto Mono", monospace;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-baby-blue);
+    color: #111827;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-nunito);
+  }
+
+  input[type="number"], .data-font {
+    font-family: var(--font-roboto-mono);
+  }
+}

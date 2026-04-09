@@ -1,0 +1,21 @@
+{
+  "name": "Experiment 626: Quail Tracker",
+  "short_name": "Quail Tracker",
+  "description": "Daily data collection for Japanese Quail laying performance",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E3F2FD",
+  "theme_color": "#E3F2FD",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
