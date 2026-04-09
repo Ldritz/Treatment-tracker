@@ -35,7 +35,27 @@ export async function openDb() {
       feedRefused REAL NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(date, block, treatment)
-    )
+    );
+
+    CREATE TABLE IF NOT EXISTS egg_quality_logs (
+      id TEXT PRIMARY KEY,
+      date TEXT NOT NULL,
+      block INTEGER NOT NULL,
+      treatment TEXT NOT NULL,
+      l1 REAL,
+      l2 REAL,
+      l3 REAL,
+      w1 REAL,
+      w2 REAL,
+      w3 REAL,
+      intactEggWeight REAL,
+      albumenHeight REAL,
+      yolkWeight REAL,
+      dryShellWeight REAL,
+      status TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   `)
 
   return dbInstance

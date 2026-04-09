@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { CageData } from '@/lib/constants'
 import { Bird, Egg, Leaf, Save, AlertCircle } from 'lucide-react'
+import { Tooltip } from './Tooltip'
 
 type FormData = {
   liveQuails: string;
@@ -176,7 +177,8 @@ export const DataEntryForm = ({ selectedCage, onSave, onCancel, initialData }: D
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
             <label className="flex items-center gap-2 font-bold text-gray-700">
               <Leaf className="text-green-600 w-5 h-5" />
-              Total Feed Intake (g)
+              Feed Given (g)
+              <Tooltip text="The amount of feed placed into the cage at the start of the day." />
             </label>
             <input
               type="number"
@@ -192,6 +194,7 @@ export const DataEntryForm = ({ selectedCage, onSave, onCancel, initialData }: D
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-red-50 p-3 rounded-lg border border-red-100">
             <label className="flex items-center gap-2 font-bold text-gray-700 pl-7">
               Feed Refused (g) <span className="text-red-500">*</span>
+              <Tooltip text="The amount of leftover feed removed from the cage." />
             </label>
             <input
               type="number"

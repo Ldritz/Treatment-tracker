@@ -5,6 +5,8 @@ import { format } from 'date-fns';
 import { Header } from '@/components/Header';
 import { CageGrid } from '@/components/CageGrid';
 import { DataEntryForm } from '@/components/DataEntryForm';
+import { Onboarding } from '@/components/Onboarding';
+import { Navigation } from '@/components/Navigation';
 import { CageData } from '@/lib/constants';
 import { Download, WifiOff, Wifi } from 'lucide-react';
 
@@ -186,6 +188,10 @@ export default function Home() {
 
   return (
     <main>
+      <Onboarding />
+
+      <Navigation />
+
       <div className="flex justify-between items-center mb-2 px-1">
         {/* Connection Status Indicator */}
         <div className="flex items-center gap-2 text-sm font-bold">
