@@ -6,6 +6,8 @@ import { Header } from '@/components/Header';
 import { Navigation } from '@/components/Navigation';
 import { InteractiveEggDiagram } from '@/components/InteractiveEggDiagram';
 import { QualityLabForm, QualityFormData } from '@/components/QualityLabForm';
+import { CageGrid } from '@/components/CageGrid';
+import { CageData } from '@/lib/constants';
 import { Download, WifiOff, Wifi, Clock, ChevronRight } from 'lucide-react';
 
 export default function QualityLab() {
@@ -13,6 +15,7 @@ export default function QualityLab() {
   const [logs, setLogs] = useState<QualityFormData[]>([]);
   const [activeDraft, setActiveDraft] = useState<QualityFormData | null>(null);
   const [scrollToRegion, setScrollToRegion] = useState<string | undefined>();
+  const [selectedCage, setSelectedCage] = useState<CageData | null>(null);
 
   const [isOnline, setIsOnline] = useState(true);
   const [unsyncedCount, setUnsyncedCount] = useState(0);
@@ -148,6 +151,15 @@ export default function QualityLab() {
   };
 
   const drafts = logs.filter(l => l.status === 'draft');
+  const completedCages = new Set(logs.filter(l => l.status === 'completed').map(l => `${l.block}-${l.treatment}`));
+  const draftCages = new Set(drafts.map(l => `${l.block}-${l.treatment}`));
+
+  const handleSelectCage = (cage: CageData) => {
+    setSelectedCage(cage);
+    // Find if there's a draft for this cage
+    const existingDraft = drafts.find(d => d.block === String(cage.block) && d.treatment === cage.treatment);
+    setActiveDraft(existingDraft || null);
+  };
 
   return (
     <main>
@@ -185,7 +197,10 @@ export default function QualityLab() {
             {drafts.map(draft => (
               <button
                 key={draft.id}
-                onClick={() => setActiveDraft(draft)}
+                onClick={() => {
+                  setActiveDraft(draft);
+                  setSelectedCage({ block: parseInt(draft.block), treatment: draft.treatment, row: 0 }); // row isn't strictly needed for the form
+                }}
                 className={`flex items-center justify-between min-w-[200px] p-3 rounded-lg border-2 text-left transition-all ${activeDraft?.id === draft.id ? 'bg-yellow-200 border-yellow-500 shadow-md scale-105' : 'bg-white border-yellow-200 hover:border-yellow-400'}`}
               >
                 <div>
@@ -199,17 +214,30 @@ export default function QualityLab() {
         </div>
       )}
 
-      <InteractiveEggDiagram onSelectRegion={(region) => {
-        setScrollToRegion(region);
-        // Reset state slightly after so it can trigger again if needed
-        setTimeout(() => setScrollToRegion(undefined), 100);
-      }} />
-
-      <QualityLabForm
-        initialData={activeDraft}
-        onSave={handleSaveData}
-        scrollToRegion={scrollToRegion}
+      <CageGrid
+        selectedCage={selectedCage}
+        onSelectCage={handleSelectCage}
+        completedCages={completedCages}
+        draftCages={draftCages}
       />
+
+      {(selectedCage || activeDraft) && (
+        <>
+          <InteractiveEggDiagram onSelectRegion={(region) => {
+            setScrollToRegion(region);
+            // Reset state slightly after so it can trigger again if needed
+            setTimeout(() => setScrollToRegion(undefined), 100);
+          }} />
+
+          <QualityLabForm
+            initialData={activeDraft}
+            onSave={handleSaveData}
+            scrollToRegion={scrollToRegion}
+            selectedBlock={selectedCage ? String(selectedCage.block) : undefined}
+            selectedTreatment={selectedCage ? selectedCage.treatment : undefined}
+          />
+        </>
+      )}
 
     </main>
   );

@@ -1,8 +1,13 @@
 
-> quail-tracker@0.1.0 start
-> next start
+> quail-tracker@0.1.0 dev
+> next dev
 
-▲ Next.js 16.2.3
-- Local:         http://localhost:3000
-- Network:       http://192.168.0.2:3000
-✓ Ready in 418ms
+⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
+▲ Next.js 16.2.3 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.0.2:3001
+✓ Ready in 942ms
+
+○ Compiling /quality-lab ...
+ GET /quality-lab 200 in 7.3s (next.js: 6.8s, application-code: 525ms)
+ GET /api/quality-logs?date=2026-04-09 200 in 1002ms (next.js: 950ms, application-code: 52ms)

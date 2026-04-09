@@ -5,9 +5,10 @@ type CageGridProps = {
   selectedCage: CageData | null;
   onSelectCage: (cage: CageData) => void;
   completedCages: Set<string>; // 'block-treatment'
+  draftCages?: Set<string>; // 'block-treatment'
 }
 
-export const CageGrid = ({ selectedCage, onSelectCage, completedCages }: CageGridProps) => {
+export const CageGrid = ({ selectedCage, onSelectCage, completedCages, draftCages = new Set() }: CageGridProps) => {
 
   const getCageState = (block: number, treatment: string): CageState => {
     if (selectedCage?.block === block && selectedCage?.treatment === treatment) {
@@ -15,6 +16,9 @@ export const CageGrid = ({ selectedCage, onSelectCage, completedCages }: CageGri
     }
     if (completedCages.has(`${block}-${treatment}`)) {
       return 'completed'
+    }
+    if (draftCages.has(`${block}-${treatment}`)) {
+      return 'draft'
     }
     return 'pending'
   }
@@ -25,6 +29,8 @@ export const CageGrid = ({ selectedCage, onSelectCage, completedCages }: CageGri
         return 'bg-stitch-blue text-white ring-4 ring-stitch-blue ring-opacity-50 scale-105 z-10'
       case 'completed':
         return 'bg-mint-green text-completed-text border-mint-green'
+      case 'draft':
+        return 'bg-yellow-300 text-yellow-900 border-yellow-500'
       case 'pending':
       default:
         return 'bg-pending-bg text-pending-text hover:bg-blue-200 border-stitch-blue'

@@ -28,9 +28,11 @@ type QualityLabFormProps = {
   initialData?: QualityFormData | null;
   onSave: (data: QualityFormData) => Promise<void>;
   scrollToRegion?: string;
+  selectedBlock?: string;
+  selectedTreatment?: string;
 };
 
-export const QualityLabForm = ({ initialData, onSave, scrollToRegion }: QualityLabFormProps) => {
+export const QualityLabForm = ({ initialData, onSave, scrollToRegion, selectedBlock, selectedTreatment }: QualityLabFormProps) => {
   const [formData, setFormData] = useState<Omit<QualityFormData, 'id' | 'status'>>({ ...DEFAULT_FORM });
   const [isSaving, setIsSaving] = useState(false);
   const [showAnimation, setShowAnimation] = useState(false);
@@ -46,10 +48,10 @@ export const QualityLabForm = ({ initialData, onSave, scrollToRegion }: QualityL
       if (initialData) {
         setFormData(initialData);
       } else {
-        setFormData({ ...DEFAULT_FORM });
+        setFormData({ ...DEFAULT_FORM, block: selectedBlock || '', treatment: selectedTreatment || '' });
       }
     }, 0);
-  }, [initialData]);
+  }, [initialData, selectedBlock, selectedTreatment]);
 
   useEffect(() => {
     if (scrollToRegion === 'albumen' || scrollToRegion === 'yolk') {
@@ -135,28 +137,30 @@ export const QualityLabForm = ({ initialData, onSave, scrollToRegion }: QualityL
       {/* Form Area */}
       <div className="flex-1 space-y-6">
 
-        {/* Card 1: Metadata */}
-        <div className="bg-white rounded-xl border-2 border-stitch-blue p-5 shadow-sm">
-          <h4 className="font-bold text-stitch-blue mb-4">Metadata</h4>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Block</label>
-              <select name="block" value={formData.block} onChange={handleChange} className="w-full border-2 border-gray-300 rounded-lg p-2 font-bold focus:border-stitch-blue outline-none">
-                <option value="">Select...</option>
-                <option value="1">Block 1</option>
-                <option value="2">Block 2</option>
-                <option value="3">Block 3</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Treatment</label>
-              <select name="treatment" value={formData.treatment} onChange={handleChange} className="w-full border-2 border-gray-300 rounded-lg p-2 font-bold focus:border-stitch-blue outline-none">
-                <option value="">Select...</option>
-                {['T1','T2','T3','T4','T5','T6','T7','T8','T9'].map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+        {/* Card 1: Metadata - Hidden when cage is selected via grid */}
+        {!selectedBlock && (
+          <div className="bg-white rounded-xl border-2 border-stitch-blue p-5 shadow-sm">
+            <h4 className="font-bold text-stitch-blue mb-4">Metadata</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Block</label>
+                <select name="block" value={formData.block} onChange={handleChange} className="w-full border-2 border-gray-300 rounded-lg p-2 font-bold focus:border-stitch-blue outline-none">
+                  <option value="">Select...</option>
+                  <option value="1">Block 1</option>
+                  <option value="2">Block 2</option>
+                  <option value="3">Block 3</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Treatment</label>
+                <select name="treatment" value={formData.treatment} onChange={handleChange} className="w-full border-2 border-gray-300 rounded-lg p-2 font-bold focus:border-stitch-blue outline-none">
+                  <option value="">Select...</option>
+                  {['T1','T2','T3','T4','T5','T6','T7','T8','T9'].map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Card 2: Caliper Measurements */}
         <div ref={caliperRef} className="bg-white rounded-xl border-2 border-stitch-blue p-5 shadow-sm">

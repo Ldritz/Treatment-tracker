@@ -12,7 +12,7 @@ export const InteractiveEggDiagram = ({ onSelectRegion }: DiagramProps) => {
       <h3 className="text-xl font-bold text-stitch-blue mb-4 uppercase tracking-wide">Interactive Egg Selector</h3>
       <p className="text-sm text-gray-500 mb-6 font-bold">Tap a section of the egg to jump to its data entry field.</p>
 
-      <div className="relative w-full max-w-sm aspect-[3/4]">
+      <div className="relative w-full max-w-sm aspect-[3/4] mb-4">
         <svg
           viewBox="0 0 300 400"
           className="w-full h-full drop-shadow-lg"
@@ -76,28 +76,29 @@ export const InteractiveEggDiagram = ({ onSelectRegion }: DiagramProps) => {
           <g className="font-nunito font-bold text-sm" fill="#1A237E">
 
             {/* Shell Pointer */}
-            <polyline points="30,120 10,120 10,100" fill="none" stroke="#1A237E" strokeWidth="2" />
-            <text x="5" y="90" className="cursor-pointer hover:underline" onClick={() => onSelectRegion('shell')}>Shell</text>
+            <polyline points="40,150 15,150 15,130" fill="none" stroke="#1A237E" strokeWidth="2" />
+            <text x="10" y="120" className="cursor-pointer hover:underline" onClick={() => onSelectRegion('shell')}>Shell</text>
 
             {/* Albumen Pointer */}
-            <polyline points="100,100 70,80 70,60" fill="none" stroke="#1A237E" strokeWidth="2" />
-            <text x="45" y="50" className="cursor-pointer hover:underline" onClick={() => onSelectRegion('albumen')}>Albumen</text>
+            <polyline points="110,120 80,80 80,60" fill="none" stroke="#1A237E" strokeWidth="2" />
+            <text x="60" y="50" className="cursor-pointer hover:underline" onClick={() => onSelectRegion('albumen')}>Albumen</text>
 
             {/* Yolk Pointer */}
-            <polyline points="200,200 240,180 260,180" fill="none" stroke="#1A237E" strokeWidth="2" />
-            <text x="265" y="185" className="cursor-pointer hover:underline" onClick={() => onSelectRegion('yolk')}>Yolk</text>
-
-            {/* Vitelline Membrane Pointer */}
-            <polyline points="230,280 260,300 260,320" fill="none" stroke="#1A237E" strokeWidth="2" />
-            <text x="210" y="335" className="cursor-pointer hover:underline text-xs" onClick={() => onSelectRegion('yolk')}>Vitelline Memb.</text>
+            <polyline points="200,200 260,180 275,180" fill="none" stroke="#1A237E" strokeWidth="2" />
+            <text x="280" y="185" className="cursor-pointer hover:underline" onClick={() => onSelectRegion('yolk')}>Yolk</text>
 
             {/* Shell Membrane Pointer */}
-            <polyline points="270,250 290,250 290,270" fill="none" stroke="#1A237E" strokeWidth="2" />
-            <text x="240" y="285" className="cursor-pointer hover:underline text-xs" onClick={() => onSelectRegion('shell')}>Shell Memb.</text>
+            <polyline points="270,250 295,250 295,270" fill="none" stroke="#1A237E" strokeWidth="2" />
+            <text x="235" y="285" className="cursor-pointer hover:underline text-xs" onClick={() => onSelectRegion('shell')}>Shell Mem</text>
+
+            {/* Vitelline Membrane Pointer */}
+            <polyline points="230,280 260,310 260,325" fill="none" stroke="#1A237E" strokeWidth="2" />
+            <text x="195" y="340" className="cursor-pointer hover:underline text-xs" onClick={() => onSelectRegion('yolk')}>Vitelline Memb</text>
 
           </g>
         </svg>
       </div>
+      <p className="text-sm text-gray-500 font-bold mt-2">Select a cage from the grid above to start an egg sample.</p>
     </div>
   );
 };

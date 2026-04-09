@@ -31,4 +31,4 @@ export const CAGE_LAYOUT = [
   },
 ];
 
-export type CageState = 'pending' | 'selected' | 'completed';
+export type CageState = 'pending' | 'selected' | 'completed' | 'draft';
