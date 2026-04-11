@@ -237,7 +237,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
                 width: 150,
                 child: TextField(
                   controller: fpCtrl,
-                  decoration: const InputDecoration(labelText: 'Feed Price/kg (\$)', isDense: true),
+                  decoration: const InputDecoration(labelText: 'Feed Price/kg (₱)', isDense: true),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 ),
               ),
@@ -246,7 +246,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
                 width: 150,
                 child: TextField(
                   controller: epCtrl,
-                  decoration: const InputDecoration(labelText: 'Egg Price/ea (\$)', isDense: true),
+                  decoration: const InputDecoration(labelText: 'Egg Price/ea (₱)', isDense: true),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 ),
               ),
@@ -276,9 +276,9 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
                   DataColumn(label: Text('Logs Count')),
                   DataColumn(label: Text('Total Eggs')),
                   DataColumn(label: Text('Total Feed (kg)')),
-                  DataColumn(label: Text('Gross Revenue (\$)', style: TextStyle(color: Color(0xFF10B981)))),
-                  DataColumn(label: Text('Feed Cost (\$)', style: TextStyle(color: AppTheme.error))),
-                  DataColumn(label: Text('IOFC (\$)', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('Gross Revenue (₱)', style: TextStyle(color: Color(0xFF10B981)))),
+                  DataColumn(label: Text('Feed Cost (₱)', style: TextStyle(color: AppTheme.error))),
+                  DataColumn(label: Text('IOFC (₱)', style: TextStyle(fontWeight: FontWeight.bold))),
                 ],
                 rows: sortedTreatments.map((t) {
                   final logs = groupedLogs[t]!;

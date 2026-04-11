@@ -146,7 +146,7 @@ class _EconomicsScreenState extends State<EconomicsScreen> {
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, size: 18, color: AppTheme.primary),
-            prefixText: '\$ ',
+            prefixText: '₱ ',
             filled: true,
             fillColor: AppTheme.surfaceLowest,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
@@ -236,7 +236,7 @@ class _EconomicsScreenState extends State<EconomicsScreen> {
                   ),
                 ),
                 Text(
-                  '\$${iofc.toStringAsFixed(2)}',
+                  '₱${iofc.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -268,7 +268,7 @@ class _EconomicsScreenState extends State<EconomicsScreen> {
       children: [
         Text(label, style: const TextStyle(color: AppTheme.textDark)),
         Text(
-          '${amount < 0 ? '-' : ''}\$${amount.abs().toStringAsFixed(2)}',
+          '${amount < 0 ? '-' : ''}₱${amount.abs().toStringAsFixed(2)}',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: isPositive ? const Color(0xFF10B981) : AppTheme.error,
