@@ -140,67 +140,132 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
           const SizedBox(width: 16),
         ],
       ),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
         children: [
-          // Sidebar
-          Container(
-            width: 250,
-            color: AppTheme.surfaceLowest,
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          _buildLiveAnalyticsBar(storage),
+          Expanded(
+            child: Row(
               children: [
-                const Text('Overview', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textMuted, letterSpacing: 1.2)),
-                const SizedBox(height: 16),
-                _StatTile(title: 'Total Production Logs', value: storage.productionLogs.length.toString(), icon: LucideIcons.clipboardList),
-                const SizedBox(height: 12),
-                _StatTile(title: 'Total Egg Lab Logs', value: storage.eggLogs.length.toString(), icon: LucideIcons.egg),
-                const Spacer(),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    minimumSize: const Size(double.infinity, 48),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                // Sidebar
+                Container(
+                  width: 280,
+                  color: AppTheme.surfaceLow,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Overview', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textMuted, letterSpacing: 1.2)),
+                      const SizedBox(height: 16),
+                      _StatTile(title: 'Total Production Logs', value: storage.productionLogs.length.toString(), icon: LucideIcons.clipboardList),
+                      const SizedBox(height: 12),
+                      _StatTile(title: 'Total Egg Lab Logs', value: storage.eggLogs.length.toString(), icon: LucideIcons.egg),
+                      const Spacer(),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          minimumSize: const Size(double.infinity, 48),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        icon: const Icon(LucideIcons.download),
+                        label: const Text('Export All CSV'),
+                        onPressed: () => _exportAllCsv(storage),
+                      ),
+                    ],
                   ),
-                  icon: const Icon(LucideIcons.download),
-                  label: const Text('Export All CSV'),
-                  onPressed: () => _exportAllCsv(storage),
+                ),
+                // Main Content
+                Expanded(
+                  child: DefaultTabController(
+                    length: 3,
+                    child: Column(
+                      children: [
+                        Container(
+                          color: AppTheme.surface,
+                          child: const TabBar(
+                            labelColor: AppTheme.primary,
+                            unselectedLabelColor: AppTheme.textMuted,
+                            indicatorColor: AppTheme.primary,
+                            tabs: [
+                              Tab(text: 'Daily Production Data'),
+                              Tab(text: 'Egg Lab Quality Data'),
+                              Tab(text: 'Economic Efficiency'),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: TabBarView(
+                            children: [
+                              _buildProductionTable(storage.productionLogs),
+                              _buildEggTable(storage.eggLogs),
+                              _buildEconomicTab(context, storage),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-          // Main Content
-          Expanded(
-            child: DefaultTabController(
-              length: 3,
-              child: Column(
-                children: [
-                  Container(
-                    color: AppTheme.surface,
-                    child: const TabBar(
-                      labelColor: AppTheme.primary,
-                      unselectedLabelColor: AppTheme.textMuted,
-                      indicatorColor: AppTheme.primary,
-                      tabs: [
-                        Tab(text: 'Daily Production Data'),
-                        Tab(text: 'Egg Lab Quality Data'),
-                        Tab(text: 'Economic Efficiency'),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        _buildProductionTable(storage.productionLogs),
-                        _buildEggTable(storage.eggLogs),
-                        _buildEconomicTab(context, storage),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveAnalyticsBar(StorageService storage) {
+    double avgHdep = 0;
+    if (storage.productionLogs.isNotEmpty) {
+      avgHdep = storage.productionLogs.map((l) => l.hdep).reduce((a, b) => a + b) / storage.productionLogs.length;
+    }
+
+    double totalProfit = 0;
+    for (var log in storage.productionLogs) {
+      totalProfit += (log.eggs * storage.eggPrice) - ((log.feedGiven / 1000) * storage.feedPrice);
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceLowest,
+        border: Border(bottom: BorderSide(color: AppTheme.border.withOpacity(0.5))),
+      ),
+      child: Row(
+        children: [
+          _buildAnalyticsCard('Avg HDEP %', '${avgHdep.toStringAsFixed(1)}%', LucideIcons.trendingUp, avgHdep > 80 ? Colors.green : Colors.orange),
+          const SizedBox(width: 20),
+          _buildAnalyticsCard('Market Value (Total)', '₱${totalProfit.toStringAsFixed(2)}', LucideIcons.banknote, Colors.blue),
+          const SizedBox(width: 20),
+          _buildAnalyticsCard('Researchers active', '2', LucideIcons.users, Colors.deepPurple),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalyticsCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      width: 220,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.border.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+            child: Icon(icon, size: 20, color: color),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.textMuted, letterSpacing: 0.5)),
+              const SizedBox(height: 4),
+              Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
+            ],
           ),
         ],
       ),

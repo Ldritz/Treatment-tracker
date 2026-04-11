@@ -8,6 +8,7 @@ import '../widgets/stat_box.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/farm_grid_layout.dart';
 import '../widgets/at_a_glance_widget.dart';
+import '../widgets/success_overlay.dart';
 import '../theme.dart';
 
 class EggLabScreen extends StatefulWidget {
@@ -137,7 +138,7 @@ class _EggLabScreenState extends State<EggLabScreen> {
     );
 
     storage.addEggLog(newLog);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Egg Lab Log Saved successfully!'), backgroundColor: AppTheme.secondary));
+    SuccessOverlay.show(context, 'Lab Record Saved!');
     
     _weightCtrl.clear();
     _l1Ctrl.clear();
@@ -162,6 +163,8 @@ class _EggLabScreenState extends State<EggLabScreen> {
           children: [
             const AtAGlanceWidget(isDailyMode: false),
             const SizedBox(height: 16),
+            const Text('Farm Status', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+            const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -171,63 +174,116 @@ class _EggLabScreenState extends State<EggLabScreen> {
               child: const FarmGridLayout(indicatorContext: 'egg'),
             ),
             const SizedBox(height: 24),
-            const Text('Egg Characteristics', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+
+            // Section 1: Physical Characteristics
+            _buildSectionCard(
+              title: 'Physical Characteristics',
+              icon: LucideIcons.egg,
+              children: [
+                InputCard(label: 'Egg Weight', unit: 'g', controller: _weightCtrl, action: TextInputAction.next),
+                const SizedBox(height: 16),
+                const Text('Dimensions (mm)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textMuted)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(child: InputCard(label: 'L1', controller: _l1Ctrl, action: TextInputAction.next)),
+                    const SizedBox(width: 8),
+                    Expanded(child: InputCard(label: 'L2', controller: _l2Ctrl, action: TextInputAction.next)),
+                    const SizedBox(width: 8),
+                    Expanded(child: InputCard(label: 'L3', controller: _l3Ctrl, action: TextInputAction.next)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(child: InputCard(label: 'W1', controller: _w1Ctrl, action: TextInputAction.next)),
+                    const SizedBox(width: 8),
+                    Expanded(child: InputCard(label: 'W2', controller: _w2Ctrl, action: TextInputAction.next)),
+                    const SizedBox(width: 8),
+                    Expanded(child: InputCard(label: 'W3', controller: _w3Ctrl, action: TextInputAction.next)),
+                  ],
+                ),
+              ],
+            ),
+
             const SizedBox(height: 16),
-            InputCard(label: 'Egg Weight', unit: 'g', controller: _weightCtrl),
-            const SizedBox(height: 16),
-            const Text('Dimensions (3 Readings averaged)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textMuted)),
-            const SizedBox(height: 8),
-            Row(
+
+            // Section 2: Internal Quality Traits
+            _buildSectionCard(
+              title: 'Internal Quality Traits',
+              icon: LucideIcons.flaskConical,
               children: [
-                Expanded(child: InputCard(label: 'L1', placeholder: 'mm', controller: _l1Ctrl)),
-                const SizedBox(width: 8),
-                Expanded(child: InputCard(label: 'L2', placeholder: 'mm', controller: _l2Ctrl)),
-                const SizedBox(width: 8),
-                Expanded(child: InputCard(label: 'L3', placeholder: 'mm', controller: _l3Ctrl)),
+                InputCard(label: 'Albumen Height', unit: 'mm', controller: _albumenCtrl, action: TextInputAction.next),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: InputCard(label: 'Shell Weight', unit: 'g', controller: _shellCtrl, action: TextInputAction.next)),
+                    const SizedBox(width: 12),
+                    Expanded(child: InputCard(label: 'Yolk Weight', unit: 'g', controller: _yolkCtrl, action: TextInputAction.done)),
+                  ],
+                ),
               ],
             ),
-            Row(
-              children: [
-                Expanded(child: InputCard(label: 'W1', placeholder: 'mm', controller: _w1Ctrl)),
-                const SizedBox(width: 8),
-                Expanded(child: InputCard(label: 'W2', placeholder: 'mm', controller: _w2Ctrl)),
-                const SizedBox(width: 8),
-                Expanded(child: InputCard(label: 'W3', placeholder: 'mm', controller: _w3Ctrl)),
-              ],
-            ),
-            if (_l > 0 && _wd > 0)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: Text('Averages → Length: ${_l.toStringAsFixed(2)} mm | Width: ${_wd.toStringAsFixed(2)} mm', style: const TextStyle(fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.bold)),
-              ),
-            InputCard(label: 'Albumen Height', unit: 'mm', controller: _albumenCtrl),
-            Row(
-              children: [
-                Expanded(child: InputCard(label: 'Shell Weight', unit: 'g', controller: _shellCtrl)),
-                const SizedBox(width: 8),
-                Expanded(child: InputCard(label: 'Yolk Weight', unit: 'g', controller: _yolkCtrl)),
-              ],
-            ),
+
             const SizedBox(height: 24),
-            const Text('Lab Results (Auto Calculate)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
-            const SizedBox(height: 16),
+            const Text('Lab Results (Auto Calculate)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+            const SizedBox(height: 12),
             Row(
               children: [
-                StatBox(label: 'Haugh Unit (HU)', value: haughUnit.toStringAsFixed(1), color: const Color(0xFF818CF8)),
+                Expanded(child: StatBox(label: 'Haugh Unit (HU)', value: haughUnit.toStringAsFixed(1), color: const Color(0xFF818CF8))),
                 const SizedBox(width: 8),
-                StatBox(label: 'Shape Index', value: shapeIndex.toStringAsFixed(1), unit: '%', color: AppTheme.secondaryLight),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                StatBox(label: 'Yolk Percentage', value: yolkPct.toStringAsFixed(1), unit: '%', color: const Color(0xFFF59E0B)),
+                Expanded(child: StatBox(label: 'Shape Index', value: shapeIndex.toStringAsFixed(1), suffix: '%', color: AppTheme.secondaryLight)),
+                const SizedBox(width: 8),
+                Expanded(child: StatBox(label: 'Yolk %', value: yolkPct.toStringAsFixed(1), suffix: '%', color: const Color(0xFFF59E0B))),
               ],
             ),
             const SizedBox(height: 32),
-            CustomButton(title: 'Save Lab Record', onPressed: _saveLog),
+            CustomButton(
+              text: 'Save Lab Record',
+              onPressed: _saveLog,
+              icon: LucideIcons.checkCircle,
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionCard({required String title, required IconData icon, required List<Widget> children}) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceLowest,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: AppTheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                title.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textMuted,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
       ),
     );
   }

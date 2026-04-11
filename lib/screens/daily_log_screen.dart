@@ -7,6 +7,7 @@ import '../widgets/stat_box.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/farm_grid_layout.dart';
 import '../widgets/at_a_glance_widget.dart';
+import '../widgets/success_overlay.dart';
 import '../theme.dart';
 
 class DailyLogScreen extends StatefulWidget {
@@ -88,7 +89,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
 
   void _saveLog() {
     if (_eggsCtrl.text.isEmpty || _feedRefusalCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter Eggs and Feed Refusal.')));
+      SuccessOverlay.show(context, 'Please enter Eggs and Feed Refusal.');
       return;
     }
 
@@ -111,7 +112,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
     );
 
     storage.addProductionLog(newLog);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Daily Log Saved successfully!'), backgroundColor: AppTheme.secondary));
+    SuccessOverlay.show(context, 'Daily Log Saved!');
     
     _eggsCtrl.clear();
     _eggMassCtrl.clear();
@@ -129,6 +130,8 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
           children: [
             const AtAGlanceWidget(isDailyMode: true),
             const SizedBox(height: 16),
+            const Text('Farm Status', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+            const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -138,32 +141,118 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
               child: const FarmGridLayout(indicatorContext: 'daily'),
             ),
             const SizedBox(height: 24),
-            const Text('Performance Data (Daily)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
-            const SizedBox(height: 16),
-            Row(
+            
+            // Section 1: Egg Production
+            _buildSectionCard(
+              title: 'Egg Production',
+              icon: LucideIcons.egg,
               children: [
-                Expanded(child: InputCard(label: 'Number of Eggs', placeholder: '#', controller: _eggsCtrl)),
-                const SizedBox(width: 8),
-                Expanded(child: InputCard(label: 'Total Egg Mass', placeholder: 'g', unit: 'g', controller: _eggMassCtrl)),
+                Row(
+                  children: [
+                    Expanded(child: InputCard(label: 'Number of Eggs', placeholder: '#', controller: _eggsCtrl, action: TextInputAction.next)),
+                    const SizedBox(width: 12),
+                    Expanded(child: InputCard(label: 'Egg Mass (g)', placeholder: '0.0', controller: _eggMassCtrl, action: TextInputAction.next)),
+                  ],
+                ),
               ],
             ),
-            InputCard(label: 'Number of quails alive', controller: _quailsCtrl),
-            InputCard(label: 'Feed Given', placeholder: '90', unit: 'g', controller: _feedGivenCtrl),
-            InputCard(label: 'Feed Refusal', placeholder: 'Leftover feed', unit: 'g', controller: _feedRefusalCtrl),
+            
             const SizedBox(height: 16),
+
+            // Section 2: Feed & Performance
+            _buildSectionCard(
+              title: 'Feed & Performance',
+              icon: LucideIcons.wheat,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: InputCard(label: 'Birds Alive', placeholder: '#', controller: _quailsCtrl, action: TextInputAction.next)),
+                    const SizedBox(width: 12),
+                    Expanded(child: InputCard(label: 'Feed Refusal (g)', placeholder: '0.0', controller: _feedRefusalCtrl, action: TextInputAction.done)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.background,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(LucideIcons.info, size: 16, color: AppTheme.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'System set feed given at ${_feedGivenNum.toStringAsFixed(0)}g based on bird count.',
+                          style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 24),
+            const Text('Calculated Insights', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+            const SizedBox(height: 12),
             Row(
               children: [
-                StatBox(label: 'VFI', value: vfi.toStringAsFixed(1), unit: 'g'),
-                const SizedBox(width: 8),
-                StatBox(label: 'FCR', value: fcr.toStringAsFixed(2), color: const Color(0xFF10B981)),
-                const SizedBox(width: 8),
-                StatBox(label: 'Daily HDEP', value: hdep.toStringAsFixed(1), unit: '%', color: AppTheme.secondary),
+                Expanded(child: StatBox(label: 'HDEP %', value: hdep.toStringAsFixed(1), suffix: '%', color: const Color(0xFF10B981))),
+                const SizedBox(width: 12),
+                Expanded(child: StatBox(label: 'FCR', value: fcr.toStringAsFixed(2), color: AppTheme.primary)),
+                const SizedBox(width: 12),
+                Expanded(child: StatBox(label: 'VFI', value: vfi.toStringAsFixed(1), suffix: 'g', color: AppTheme.secondary)),
               ],
             ),
             const SizedBox(height: 32),
-            CustomButton(title: 'Save Record', onPressed: _saveLog),
+            CustomButton(
+              text: 'Save Daily Log',
+              onPressed: _saveLog,
+              icon: LucideIcons.checkCircle,
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionCard({required String title, required IconData icon, required List<Widget> children}) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceLowest,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: AppTheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                title.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textMuted,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
       ),
     );
   }

@@ -64,17 +64,29 @@ class AtAGlanceWidget extends StatelessWidget {
       }
     }
 
+    // Calculate overall percentage (Assuming 27 total treatments: 3 blocks * 9 treatments)
+    final int totalRequired = 27;
+    final int completedCount = block1Treatments.length + block2Treatments.length + block3Treatments.length;
+    final double overallProgress = completedCount / totalRequired.toDouble();
+
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF00459A), // AppTheme.primary
+            Color(0xFF00306A), 
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0F181C20),
-            blurRadius: 32,
-            offset: Offset(0, 12),
+            color: const Color(0xFF00459A).withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           )
         ],
       ),
@@ -89,62 +101,90 @@ class AtAGlanceWidget extends StatelessWidget {
                 children: [
                   Text(
                     'Hello, ${storage.researcherName}!',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.textMuted,
+                      color: Colors.white.withOpacity(0.8),
                       fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     todayStr,
                     style: const TextStyle(
-                      fontSize: 22,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.textDark,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Experiment Week $week',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w600,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Experiment Week $week'.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.0,
+                      ),
                     ),
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isDailyMode ? LucideIcons.clipboardCheck : LucideIcons.flaskConical,
-                  color: AppTheme.primary,
-                  size: 28,
+              // Progress Ring
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: CircularProgressIndicator(
+                      value: overallProgress,
+                      strokeWidth: 6,
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                  Text(
+                    '${(overallProgress * 100).toInt()}%',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+          Row(
+            children: [
+              const Icon(LucideIcons.activity, color: Colors.white70, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'Today\'s Progress'.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white70,
+                  letterSpacing: 1.2,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          const Text(
-            'Today\'s Progress',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textMuted,
-            ),
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(child: _buildBlockProgress('Block 1', block1Treatments.length)),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(child: _buildBlockProgress('Block 2', block2Treatments.length)),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(child: _buildBlockProgress('Block 3', block3Treatments.length)),
             ],
           ),
@@ -160,19 +200,19 @@ class AtAGlanceWidget extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
-            Text('$count/9', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textMuted)),
+            Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text('$count/9', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white.withOpacity(0.7))),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: LinearProgressIndicator(
             value: count / 9.0,
-            minHeight: 6,
-            backgroundColor: AppTheme.border,
+            minHeight: 4,
+            backgroundColor: Colors.white.withOpacity(0.1),
             valueColor: AlwaysStoppedAnimation<Color>(
-              count == 9 ? const Color(0xFF10B981) : AppTheme.primary,
+              count == 9 ? const Color(0xFF10B981) : Colors.white.withOpacity(0.8),
             ),
           ),
         ),
