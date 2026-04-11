@@ -14,7 +14,7 @@ function App() {
       <div className="layout">
         <aside className="sidebar">
           <div className="sidebar-header">
-            <h1 className="app-title">Quail Logger Web</h1>
+            <h1 className="app-title">CoturniSync Web</h1>
           </div>
           <nav className="nav-links">
             <NavLink to="/" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>

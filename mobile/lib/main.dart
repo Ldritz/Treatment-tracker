@@ -38,7 +38,7 @@ class QuailLoggerApp extends StatelessWidget {
     final storage = context.watch<StorageService>();
     
     return MaterialApp(
-      title: 'Quail Logger',
+      title: 'CoturniSync',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
@@ -71,7 +71,7 @@ class _MainTabContainerState extends State<MainTabContainer> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Quail Logger', style: TextStyle(color: theme.textTheme.displaySmall?.color, fontWeight: FontWeight.bold)),
+        title: const Text('CoturniSync', style: TextStyle(fontWeight: FontWeight.bold)),
         elevation: 0,
         actions: [
           Consumer<SyncService>(
