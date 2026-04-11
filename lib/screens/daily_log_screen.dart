@@ -107,6 +107,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
       vfi: double.parse(vfi.toStringAsFixed(1)),
       fcr: double.parse(fcr.toStringAsFixed(2)),
       hdep: double.parse(hdep.toStringAsFixed(1)),
+      recordedby: storage.researcherName,
     );
 
     storage.addProductionLog(newLog);

@@ -133,6 +133,7 @@ class _EggLabScreenState extends State<EggLabScreen> {
       haughUnit: double.parse(haughUnit.toStringAsFixed(1)),
       shapeIndex: double.parse(shapeIndex.toStringAsFixed(1)),
       yolkPct: double.parse(yolkPct.toStringAsFixed(1)),
+      recordedby: storage.researcherName,
     );
 
     storage.addEggLog(newLog);

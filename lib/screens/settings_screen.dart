@@ -7,6 +7,45 @@ import '../theme.dart';
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
+  void _updateName(BuildContext context) {
+    final storage = context.read<StorageService>();
+    final controller = TextEditingController(text: storage.researcherName);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Edit Researcher Name', style: TextStyle(color: AppTheme.textDark)),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Full Name',
+            hintText: 'Enter your name',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: AppTheme.textMuted)),
+          ),
+          TextButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                storage.setResearcherName(controller.text.trim());
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Researcher name updated.')),
+                );
+              }
+            },
+            child: const Text('Save', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _clearLogs(BuildContext context, bool isDaily) {
     showDialog(
       context: context,
@@ -114,6 +153,18 @@ class SettingsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildSectionHeader('Researcher Profile'),
+            _buildListGroup([
+              Consumer<StorageService>(
+                builder: (context, storage, _) => _buildListTile(
+                  context,
+                  title: 'Name: ${storage.researcherName}',
+                  icon: LucideIcons.user,
+                  onTap: () => _updateName(context),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 32),
             _buildSectionHeader('Data Management'),
             _buildListGroup([
               _buildListTile(

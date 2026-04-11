@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
-import 'dart:async';
+import 'package:provider/provider.dart';
+import '../services/storage_service.dart';
 import '../main.dart';
 import '../theme.dart';
+import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -26,8 +27,17 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _animationController.forward();
 
     Timer(const Duration(seconds: 3), () {
+      final storage = context.read<StorageService>();
+      
+      Widget nextScreen;
+      if (storage.isProfileComplete) {
+        nextScreen = const MainTabContainer();
+      } else {
+        nextScreen = const OnboardingScreen();
+      }
+
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MainTabContainer()),
+        MaterialPageRoute(builder: (context) => nextScreen),
       );
     });
   }

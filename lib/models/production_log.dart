@@ -17,6 +17,7 @@ class ProductionLog {
   final bool isDeleted;
   final bool isSynced;
   final String lastModified;
+  final String recordedby;
 
   ProductionLog({
     required this.id,
@@ -35,6 +36,7 @@ class ProductionLog {
     this.isDeleted = false,
     this.isSynced = false,
     String? lastModified,
+    this.recordedby = '',
   }) : lastModified = lastModified ?? DateTime.now().toIso8601String();
 
   ProductionLog copyWith({
@@ -54,6 +56,7 @@ class ProductionLog {
     bool? isDeleted,
     bool? isSynced,
     String? lastModified,
+    String? recordedby,
   }) {
     return ProductionLog(
       id: id ?? this.id,
@@ -71,7 +74,8 @@ class ProductionLog {
       hdep: hdep ?? this.hdep,
       isDeleted: isDeleted ?? this.isDeleted,
       isSynced: isSynced ?? this.isSynced,
-      lastModified: lastModified ?? DateTime.now().toIso8601String(),
+      lastModified: lastModified ?? this.lastModified,
+      recordedby: recordedby ?? this.recordedby,
     );
   }
 
@@ -93,6 +97,7 @@ class ProductionLog {
       'isdeleted': isDeleted,
       'issynced': isSynced,
       'lastmodified': lastModified,
+      'recordedby': recordedby,
     };
   }
 
@@ -114,6 +119,7 @@ class ProductionLog {
       isDeleted: (json['isdeleted'] ?? json['is_deleted'] ?? json['isDeleted']) as bool? ?? false,
       isSynced: (json['issynced'] ?? json['is_synced'] ?? json['isSynced']) as bool? ?? false,
       lastModified: (json['lastmodified'] ?? json['last_modified'] ?? json['lastModified'] ?? json['timestamp']) as String,
+      recordedby: json['recordedby'] as String? ?? '',
     );
   }
 }

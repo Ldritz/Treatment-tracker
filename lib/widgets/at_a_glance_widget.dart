@@ -88,6 +88,15 @@ class AtAGlanceWidget extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
+                    'Hello, ${storage.researcherName}!',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.textMuted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
                     todayStr,
                     style: const TextStyle(
                       fontSize: 22,

@@ -229,6 +229,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
             const DataColumn(label: Text('VFI')),
             const DataColumn(label: Text('FCR')),
             const DataColumn(label: Text('HDEP%')),
+            const DataColumn(label: Text('Researcher')),
             if (_isAdmin) const DataColumn(label: Text('Actions')),
           ],
           rows: logs.map((log) {
@@ -246,6 +247,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
                 DataCell(Text(log.vfi.toStringAsFixed(1))),
                 DataCell(Text(log.fcr.toStringAsFixed(2))),
                 DataCell(Text(log.hdep.toStringAsFixed(1))),
+                DataCell(Text(log.recordedby.isEmpty ? '-' : log.recordedby)),
                 if (_isAdmin)
                   DataCell(
                     IconButton(
@@ -286,6 +288,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
             const DataColumn(label: Text('Haugh Unit')),
             const DataColumn(label: Text('Shape Index')),
             const DataColumn(label: Text('Yolk %')),
+            const DataColumn(label: Text('Researcher')),
             if (_isAdmin) const DataColumn(label: Text('Actions')),
           ],
           rows: logs.map((log) {
@@ -304,6 +307,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
                 DataCell(Text(log.haughUnit.toStringAsFixed(2))),
                 DataCell(Text(log.shapeIndex.toStringAsFixed(2))),
                 DataCell(Text(log.yolkPct.toStringAsFixed(2))),
+                DataCell(Text(log.recordedby.isEmpty ? '-' : log.recordedby)),
                  if (_isAdmin)
                   DataCell(
                     IconButton(

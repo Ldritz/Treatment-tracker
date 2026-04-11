@@ -23,6 +23,7 @@ class EggLog {
   final bool isDeleted;
   final bool isSynced;
   final String lastModified;
+  final String recordedby;
 
   EggLog({
     required this.id,
@@ -47,6 +48,7 @@ class EggLog {
     this.isDeleted = false,
     this.isSynced = false,
     String? lastModified,
+    this.recordedby = '',
   }) : lastModified = lastModified ?? DateTime.now().toIso8601String();
 
   EggLog copyWith({
@@ -72,6 +74,7 @@ class EggLog {
     bool? isDeleted,
     bool? isSynced,
     String? lastModified,
+    String? recordedby,
   }) {
     return EggLog(
       id: id ?? this.id,
@@ -95,7 +98,8 @@ class EggLog {
       yolkPct: yolkPct ?? this.yolkPct,
       isDeleted: isDeleted ?? this.isDeleted,
       isSynced: isSynced ?? this.isSynced,
-      lastModified: lastModified ?? DateTime.now().toIso8601String(),
+      lastModified: lastModified ?? this.lastModified,
+      recordedby: recordedby ?? this.recordedby,
     );
   }
 
@@ -123,6 +127,7 @@ class EggLog {
       'isdeleted': isDeleted,
       'issynced': isSynced,
       'lastmodified': lastModified,
+      'recordedby': recordedby,
     };
   }
 
@@ -150,6 +155,8 @@ class EggLog {
       isDeleted: (json['isdeleted'] ?? json['is_deleted'] ?? json['isDeleted']) as bool? ?? false,
       isSynced: (json['issynced'] ?? json['is_synced'] ?? json['isSynced']) as bool? ?? false,
       lastModified: (json['lastmodified'] ?? json['last_modified'] ?? json['lastModified'] ?? json['timestamp']) as String,
+      recordedby: json['recordedby'] as String? ?? '',
     );
   }
+
 }

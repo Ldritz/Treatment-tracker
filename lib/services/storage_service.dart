@@ -9,11 +9,13 @@ class StorageService extends ChangeNotifier {
   static const String _eggLogsKey = 'egg_logs';
   static const String _treatmentKey = 'treatment';
   static const String _blockKey = 'block';
+  static const String _researcherNameKey = 'researcher_name';
 
   List<ProductionLog> _productionLogs = [];
   List<EggLog> _eggLogs = [];
   String _treatment = 'T1';
   String _block = '1';
+  String _researcherName = '';
 
   List<ProductionLog> get productionLogs => _productionLogs.where((l) => !l.isDeleted).toList();
   List<EggLog> get eggLogs => _eggLogs.where((l) => !l.isDeleted).toList();
@@ -23,12 +25,16 @@ class StorageService extends ChangeNotifier {
   
   String get treatment => _treatment;
   String get block => _block;
+  String get researcherName => _researcherName;
+
+  bool get isProfileComplete => _researcherName.trim().isNotEmpty;
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     
     _treatment = prefs.getString(_treatmentKey) ?? 'T1';
     _block = prefs.getString(_blockKey) ?? '1';
+    _researcherName = prefs.getString(_researcherNameKey) ?? '';
 
     final prodString = prefs.getString(_prodLogsKey);
     if (prodString != null) {
@@ -56,6 +62,13 @@ class StorageService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_blockKey, b);
+  }
+
+  void setResearcherName(String name) async {
+    _researcherName = name;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_researcherNameKey, name);
   }
 
   Future<void> addProductionLog(ProductionLog log) async {
