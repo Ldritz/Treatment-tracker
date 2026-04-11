@@ -1,6 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, FlaskConical, Download } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import ProductionLogs from './components/ProductionLogs';
 import EggLabLogs from './components/EggLabLogs';
