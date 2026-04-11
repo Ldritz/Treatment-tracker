@@ -185,7 +185,7 @@ class SettingsScreen extends StatelessWidget {
             child: Icon(LucideIcons.settings, color: theme.primaryColor, size: 28),
           ),
           const SizedBox(width: 16),
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -196,7 +196,7 @@ class SettingsScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
+              const Text(
                 'Manage your app preferences and data',
                 style: TextStyle(
                   color: Color(0xFF94A3B8),
