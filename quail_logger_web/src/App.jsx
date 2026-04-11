@@ -1,0 +1,57 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import { LayoutDashboard, ClipboardList, FlaskConical, Download } from 'lucide-react';
+import Dashboard from './components/Dashboard';
+import ProductionLogs from './components/ProductionLogs';
+import EggLabLogs from './components/EggLabLogs';
+import Economics from './components/Economics';
+import Export from './components/Export';
+import { LayoutDashboard, ClipboardList, FlaskConical, Coins, Download } from 'lucide-react';
+
+function App() {
+  return (
+    <Router>
+      <div className="layout">
+        <aside className="sidebar">
+          <div className="sidebar-header">
+            <h1 className="app-title">Quail Logger Web</h1>
+          </div>
+          <nav className="nav-links">
+            <NavLink to="/" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
+              <LayoutDashboard size={20} />
+              Dashboard
+            </NavLink>
+            <NavLink to="/production" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
+              <ClipboardList size={20} />
+              Daily Logs
+            </NavLink>
+            <NavLink to="/egg-lab" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
+              <FlaskConical size={20} />
+              Egg Lab
+            </NavLink>
+            <NavLink to="/economics" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
+              <Coins size={20} />
+              Economics
+            </NavLink>
+            <NavLink to="/export" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
+              <Download size={20} />
+              Export
+            </NavLink>
+          </nav>
+        </aside>
+        
+        <main className="main-content">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/production" element={<ProductionLogs />} />
+            <Route path="/egg-lab" element={<EggLabLogs />} />
+            <Route path="/economics" element={<Economics />} />
+            <Route path="/export" element={<Export />} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
