@@ -5,6 +5,7 @@ class StatBox extends StatelessWidget {
   final String label;
   final String value;
   final String? unit;
+  final String? suffix; // alias for unit
   final Color? color;
 
   const StatBox({
@@ -12,12 +13,14 @@ class StatBox extends StatelessWidget {
     required this.label,
     required this.value,
     this.unit,
+    this.suffix,
     this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final themeColor = color ?? AppTheme.primary;
+    final displayUnit = unit ?? suffix;
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -41,10 +44,10 @@ class StatBox extends StatelessWidget {
                   value,
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: themeColor),
                 ),
-                if (unit != null) ...[
+                if (displayUnit != null) ...[
                   const SizedBox(width: 4),
                   Text(
-                    unit!,
+                    displayUnit,
                     style: TextStyle(fontSize: 14, color: themeColor),
                   ),
                 ]

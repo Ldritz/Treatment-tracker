@@ -2,19 +2,24 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 
 class CustomButton extends StatelessWidget {
-  final String title;
+  final String? title;
+  final String? text; // alias for title
   final VoidCallback onPressed;
   final bool isSecondary;
+  final IconData? icon;
 
   const CustomButton({
     super.key,
-    required this.title,
+    this.title,
+    this.text,
     required this.onPressed,
     this.isSecondary = false,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
+    final label = text ?? title ?? 'Submit';
     if (isSecondary) {
       return SizedBox(
         width: double.infinity,
@@ -26,7 +31,7 @@ class CustomButton extends StatelessWidget {
           ),
           onPressed: onPressed,
           child: Text(
-            title,
+            label,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
@@ -57,10 +62,16 @@ class CustomButton extends StatelessWidget {
           onTap: onPressed,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (icon != null) ...[Icon(icon!, color: Colors.white, size: 20), const SizedBox(width: 8)],
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                ),
+              ],
             ),
           ),
         ),

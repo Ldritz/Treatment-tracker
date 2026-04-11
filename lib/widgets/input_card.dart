@@ -7,6 +7,7 @@ class InputCard extends StatelessWidget {
   final TextEditingController controller;
   final String? unit;
   final TextInputType keyboardType;
+  final TextInputAction action;
 
   const InputCard({
     super.key,
@@ -15,6 +16,7 @@ class InputCard extends StatelessWidget {
     this.placeholder = '',
     this.unit,
     this.keyboardType = const TextInputType.numberWithOptions(decimal: true),
+    this.action = TextInputAction.next,
   });
 
   @override
@@ -37,6 +39,7 @@ class InputCard extends StatelessWidget {
                 child: TextField(
                   controller: controller,
                   keyboardType: keyboardType,
+                  textInputAction: action,
                   style: const TextStyle(fontSize: 18, color: AppTheme.text),
                   decoration: InputDecoration(
                     hintText: placeholder,
