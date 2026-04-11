@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../services/storage_service.dart';
 import '../theme.dart';
+import 'formula_reference_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -202,34 +203,9 @@ class SettingsScreen extends StatelessWidget {
                 title: 'Formulas Overview',
                 icon: LucideIcons.calculator,
                 onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      backgroundColor: AppTheme.surface,
-                      title: const Text('Official Formulas', style: TextStyle(color: AppTheme.textDark, fontWeight: FontWeight.bold)),
-                      content: const SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('HDEP%', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)),
-                            Text('(Number of eggs / (Number of birds alive * Days)) * 100\n'),
-                            Text('VFI (Voluntary Feed Intake)', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)),
-                            Text('Feed Given - Feed Refusal\n'),
-                            Text('FCR (Feed Conversion Ratio)', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)),
-                            Text('VFI / Total Egg Mass\n'),
-                            Text('Haugh Unit (HU)', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)),
-                            Text('100 * log10(H - 1.7 * W^0.37 + 7.6)\n*(H = Albumen height in mm, W = Egg weight in g)*'),
-                          ],
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Close', style: TextStyle(color: AppTheme.secondary, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const FormulaReferenceScreen()),
                   );
                 },
               ),
