@@ -14,20 +14,10 @@ import 'screens/economics_screen.dart';
 import 'screens/settings_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/sync_service.dart';
-
-// Initialize Supabase keys
-const supabaseUrl = 'https://lpyxwxfmshuwwogalkfd.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxweXh3eGZtc2h1d3dvZ2Fsa2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MDEzNDAsImV4cCI6MjA5MTM3NzM0MH0.pWDpmmWQDugls7-SDNI5gWUk-ImkdE6ksYxxrS7dwfU';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final storageService = StorageService();
   await storageService.init();
-
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  );
 
   final syncService = SyncService(storageService);
 
@@ -47,10 +37,14 @@ class QuailLoggerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final storage = context.watch<StorageService>();
+    
     return MaterialApp(
       title: 'Quail Logger',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.themeData,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: storage.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: kIsWeb ? const WebDashboardScreen() : const SplashScreen(),
     );
   }
@@ -76,10 +70,10 @@ class _MainTabContainerState extends State<MainTabContainer> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quail Logger', style: TextStyle(color: AppTheme.textDark, fontWeight: FontWeight.bold)),
-        backgroundColor: AppTheme.surface,
+        title: Text('Quail Logger', style: TextStyle(color: theme.textTheme.displaySmall?.color, fontWeight: FontWeight.bold)),
         elevation: 0,
         actions: [
           Consumer<SyncService>(
@@ -91,10 +85,13 @@ class _MainTabContainerState extends State<MainTabContainer> {
                 color = const Color(0xFF10B981); // Emerald
               } else if (sync.status == SyncState.syncing) {
                 icon = LucideIcons.refreshCw;
-                color = AppTheme.primary;
+                color = theme.primaryColor;
+              } else if (sync.status == SyncState.disabled) {
+                icon = LucideIcons.cloudOff;
+                color = theme.textTheme.bodySmall?.color ?? Colors.grey;
               } else {
                 icon = LucideIcons.cloudOff;
-                color = AppTheme.error;
+                color = theme.colorScheme.error;
               }
               return Padding(
                 padding: const EdgeInsets.only(right: 16.0),
@@ -111,8 +108,6 @@ class _MainTabContainerState extends State<MainTabContainer> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppTheme.primary,
-        unselectedItemColor: AppTheme.textMuted,
         onTap: (index) => setState(() => _currentIndex = index),
         items: const [
           BottomNavigationBarItem(

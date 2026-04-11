@@ -23,8 +23,9 @@ class AppTheme {
   static const Color border = Color(0xFFDFE3E8); // mapped to surfaceHighest
   static const Color error = Color(0xFFBA1A1A);
 
-  static ThemeData get themeData {
+  static ThemeData get lightTheme {
     return ThemeData(
+      useMaterial3: true,
       primaryColor: primary,
       scaffoldBackgroundColor: background,
       colorScheme: const ColorScheme.light(
@@ -50,9 +51,46 @@ class AppTheme {
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         selectedItemColor: primary,
         unselectedItemColor: textMuted,
-        backgroundColor: surface,
+        backgroundColor: surfaceLowest,
         elevation: 8,
       ),
     );
   }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      primaryColor: const Color(0xFF38BDF8),
+      scaffoldBackgroundColor: const Color(0xFF0F172A),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF38BDF8),
+        secondary: Color(0xFF94A3B8),
+        surface: Color(0xFF1E293B),
+        error: Color(0xFFF43F5E),
+      ),
+      textTheme: TextTheme(
+        displayLarge: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+        displayMedium: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+        displaySmall: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
+        bodyLarge: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white),
+        bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.white.withOpacity(0.9)),
+        bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white.withOpacity(0.6)),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF1E293B),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        selectedItemColor: Color(0xFF38BDF8),
+        unselectedItemColor: Color(0xFF94A3B8),
+        backgroundColor: Color(0xFF1E293B),
+        elevation: 8,
+      ),
+    );
+  }
+
+  static ThemeData get themeData => lightTheme;
 }

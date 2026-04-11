@@ -12,6 +12,9 @@ class StorageService extends ChangeNotifier {
   static const String _researcherNameKey = 'researcher_name';
   static const String _feedPriceKey = 'feed_price';
   static const String _eggPriceKey = 'egg_price';
+  static const String _syncUrlKey = 'sync_supabase_url';
+  static const String _syncKeyKey = 'sync_supabase_key';
+  static const String _isDarkModeKey = 'is_dark_mode';
 
   List<ProductionLog> _productionLogs = [];
   List<EggLog> _eggLogs = [];
@@ -20,6 +23,9 @@ class StorageService extends ChangeNotifier {
   String _researcherName = '';
   double _feedPrice = 0.0;
   double _eggPrice = 0.0;
+  String? _syncUrl;
+  String? _syncKey;
+  bool _isDarkMode = true;
 
   List<ProductionLog> get productionLogs => _productionLogs.where((l) => !l.isDeleted).toList();
   List<EggLog> get eggLogs => _eggLogs.where((l) => !l.isDeleted).toList();
@@ -32,6 +38,11 @@ class StorageService extends ChangeNotifier {
   String get researcherName => _researcherName;
   double get feedPrice => _feedPrice;
   double get eggPrice => _eggPrice;
+  
+  bool get hasSyncConfig => _syncUrl != null && _syncKey != null;
+  String? get syncUrl => _syncUrl;
+  String? get syncKey => _syncKey;
+  bool get isDarkMode => _isDarkMode;
 
   bool get isProfileComplete => _researcherName.trim().isNotEmpty;
 
@@ -43,6 +54,9 @@ class StorageService extends ChangeNotifier {
     _researcherName = prefs.getString(_researcherNameKey) ?? '';
     _feedPrice = prefs.getDouble(_feedPriceKey) ?? 0.0;
     _eggPrice = prefs.getDouble(_eggPriceKey) ?? 0.0;
+    _syncUrl = prefs.getString(_syncUrlKey);
+    _syncKey = prefs.getString(_syncKeyKey);
+    _isDarkMode = prefs.getBool(_isDarkModeKey) ?? true;
 
     final prodString = prefs.getString(_prodLogsKey);
     if (prodString != null) {
@@ -91,6 +105,31 @@ class StorageService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_eggPriceKey, price);
+  }
+
+  void setDarkMode(bool value) async {
+    _isDarkMode = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isDarkModeKey, value);
+  }
+
+  Future<void> setSyncConfig(String url, String key) async {
+    _syncUrl = url;
+    _syncKey = key;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_syncUrlKey, url);
+    await prefs.setString(_syncKeyKey, key);
+  }
+
+  Future<void> clearSyncConfig() async {
+    _syncUrl = null;
+    _syncKey = null;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_syncUrlKey);
+    await prefs.remove(_syncKeyKey);
   }
 
   Future<void> addProductionLog(ProductionLog log) async {

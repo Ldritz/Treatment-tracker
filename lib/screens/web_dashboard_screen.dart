@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../helpers/download_stub.dart'
     if (dart.library.html) '../helpers/download_web.dart';
 import '../services/storage_service.dart';
@@ -8,6 +9,7 @@ import '../services/sync_service.dart';
 import '../models/production_log.dart';
 import '../models/egg_log.dart';
 import '../theme.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class WebDashboardScreen extends StatefulWidget {
   const WebDashboardScreen({super.key});
@@ -27,6 +29,57 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SyncService>().triggerSync();
     });
+  }
+
+  void _showPairingQR() {
+    // Detect the current base URL if on web, otherwise fallback
+    final baseUrl = kIsWeb ? Uri.base.origin : 'https://quail-logger.vercel.app';
+    const sUrl = 'https://lpyxwxfmshuwwogalkfd.supabase.co';
+    const sKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxweXh3eGZtc2h1d3dvZ2Fsa2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MDEzNDAsImV4cCI6MjA5MTM3NzM0MH0.pWDpmmWQDugls7-SDNI5gWUk-ImkdE6ksYxxrS7dwfU';
+    
+    final pairingLink = '$baseUrl/connect?u=$sUrl&k=$sKey';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Connect Mobile Device', style: TextStyle(color: AppTheme.textDark)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Scan this QR code with the Quail Logger mobile app to enable cloud synchronization.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppTheme.textMuted),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: QrImageView(
+                data: pairingLink,
+                version: QrVersions.auto,
+                size: 200.0,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SelectableText(
+              pairingLink,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 10, color: AppTheme.textMuted),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showAdminLogin() {
@@ -118,6 +171,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
             color: sync.status == SyncState.online ? const Color(0xFF10B981) : (sync.status == SyncState.syncing ? AppTheme.primary : AppTheme.error),
           ),
           const SizedBox(width: 8),
+          const SizedBox(width: 8),
           Center(
             child: Text(
               sync.status == SyncState.online ? 'Online' : (sync.status == SyncState.syncing ? 'Syncing...' : 'Offline'),
@@ -125,6 +179,17 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
             ),
           ),
           const SizedBox(width: 24),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
+            icon: const Icon(LucideIcons.smartphone, size: 18),
+            label: const Text('Link Mobile'),
+            onPressed: _showPairingQR,
+          ),
+          const SizedBox(width: 16),
           if (!_isAdmin)
             TextButton.icon(
               icon: const Icon(LucideIcons.lock, color: AppTheme.textMuted),

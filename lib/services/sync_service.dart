@@ -6,11 +6,11 @@ import 'storage_service.dart';
 import '../models/production_log.dart';
 import '../models/egg_log.dart';
 
-enum SyncState { online, syncing, offline }
+enum SyncState { online, syncing, offline, disabled }
 
-class SyncService extends ChangeNotifier {
+class SyncService with ChangeNotifier {
   final StorageService storageService;
-  final _supabase = Supabase.instance.client;
+  SupabaseClient? _supabase;
   
   SyncState _status = SyncState.offline;
   SyncState get status => _status;
@@ -22,7 +22,7 @@ class SyncService extends ChangeNotifier {
     
     // Listen to local storage changes so we trigger a sync when new logs are added
     storageService.addListener(() {
-      if (_status == SyncState.online) {
+      if (_status != SyncState.disabled) {
         _syncData();
       }
     });
@@ -30,14 +30,43 @@ class SyncService extends ChangeNotifier {
 
   void _init() {
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
-      if (results.contains(ConnectivityResult.none)) {
-        _setStatus(SyncState.offline);
+      if (storageService.hasSyncConfig) {
+        if (results.contains(ConnectivityResult.none)) {
+          _setStatus(SyncState.offline);
+        } else {
+          _syncData();
+        }
       } else {
-        _syncData();
+        _setStatus(SyncState.disabled);
       }
     });
 
     _syncData();
+  }
+
+  Future<bool> _ensureInitialized() async {
+    if (!storageService.hasSyncConfig) {
+      _setStatus(SyncState.disabled);
+      _supabase = null;
+      return false;
+    }
+
+    // If already initialized with the correct URL, return
+    if (_supabase != null && storageService.syncUrl == _supabase!.rest.url.toString().replaceFirst('/rest/v1', '')) {
+      return true;
+    }
+
+    try {
+      _supabase = SupabaseClient(
+        storageService.syncUrl!,
+        storageService.syncKey!,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('Supabase init error: $e');
+      _supabase = null;
+      return false;
+    }
   }
 
   void _setStatus(SyncState newStatus) {
@@ -48,6 +77,14 @@ class SyncService extends ChangeNotifier {
   }
 
   Future<void> _syncData() async {
+    if (!storageService.hasSyncConfig) {
+      _setStatus(SyncState.disabled);
+      return;
+    }
+
+    final initialized = await _ensureInitialized();
+    if (!initialized) return;
+
     // On web, connectivity_plus is unreliable — skip the check and attempt directly.
     if (!kIsWeb) {
       final connectivity = await Connectivity().checkConnectivity();
@@ -61,12 +98,12 @@ class SyncService extends ChangeNotifier {
     
     try {
       // 1. PULL: Fetch from Supabase
-      final prodResponse = await _supabase.from('production_logs').select();
+      final prodResponse = await _supabase!.from('production_logs').select();
       final List<dynamic> prodList = prodResponse as List<dynamic>;
       final List<ProductionLog> cloudProds = prodList.map((e) => ProductionLog.fromJson(e)).toList();
       await storageService.mergeProductionLogs(cloudProds);
 
-      final eggResponse = await _supabase.from('egg_logs').select();
+      final eggResponse = await _supabase!.from('egg_logs').select();
       final List<dynamic> eggList = eggResponse as List<dynamic>;
       final List<EggLog> cloudEggs = eggList.map((e) => EggLog.fromJson(e)).toList();
       await storageService.mergeEggLogs(cloudEggs);
@@ -83,7 +120,7 @@ class SyncService extends ChangeNotifier {
           json.remove('isSynced');
           return json;
         }).toList();
-        await _supabase.from('production_logs').upsert(prodData);
+        await _supabase!.from('production_logs').upsert(prodData);
         for (var log in unsyncedProdLogs) {
           await storageService.markProductionLogSynced(log.id);
         }
@@ -97,7 +134,7 @@ class SyncService extends ChangeNotifier {
           json.remove('isSynced');
           return json;
         }).toList();
-        await _supabase.from('egg_logs').upsert(eggData);
+        await _supabase!.from('egg_logs').upsert(eggData);
         for (var log in unsyncedEggLogs) {
           await storageService.markEggLogSynced(log.id);
         }
@@ -108,6 +145,13 @@ class SyncService extends ChangeNotifier {
       debugPrint('Sync error: $e');
       _setStatus(SyncState.offline);
     }
+  }
+
+  /// Manually force a re-initialization (e.g. after changing config)
+  Future<void> reinitialize() async {
+    _supabase = null; // Clear local reference
+    _setStatus(SyncState.offline);
+    await _syncData();
   }
 
   // Allow manual sync triggers

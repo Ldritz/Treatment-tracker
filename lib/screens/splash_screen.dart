@@ -52,8 +52,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: FadeTransition(
           opacity: _animation,
@@ -66,21 +67,21 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 height: 180,
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'CoturniSync',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primary,
+                  color: theme.primaryColor,
                   letterSpacing: 1.5,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Research Logger',
                 style: TextStyle(
                   fontSize: 16,
-                  color: AppTheme.textMuted,
+                  color: theme.textTheme.bodySmall?.color,
                   letterSpacing: 1.2,
                 ),
               ),
