@@ -76,7 +76,13 @@ class SyncService extends ChangeNotifier {
       final unsyncedEggLogs = storageService.allEggLogs.where((l) => !l.isSynced).toList();
 
       if (unsyncedProdLogs.isNotEmpty) {
-        final prodData = unsyncedProdLogs.map((l) => l.toJson()).toList();
+        final prodData = unsyncedProdLogs.map((l) {
+          final json = l.toJson();
+          json.remove('issynced');
+          json.remove('is_synced');
+          json.remove('isSynced');
+          return json;
+        }).toList();
         await _supabase.from('production_logs').upsert(prodData);
         for (var log in unsyncedProdLogs) {
           await storageService.markProductionLogSynced(log.id);
@@ -84,7 +90,13 @@ class SyncService extends ChangeNotifier {
       }
 
       if (unsyncedEggLogs.isNotEmpty) {
-        final eggData = unsyncedEggLogs.map((l) => l.toJson()).toList();
+        final eggData = unsyncedEggLogs.map((l) {
+          final json = l.toJson();
+          json.remove('issynced');
+          json.remove('is_synced');
+          json.remove('isSynced');
+          return json;
+        }).toList();
         await _supabase.from('egg_logs').upsert(eggData);
         for (var log in unsyncedEggLogs) {
           await storageService.markEggLogSynced(log.id);
