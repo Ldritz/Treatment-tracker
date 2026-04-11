@@ -10,6 +10,7 @@ import 'screens/web_dashboard_screen.dart';
 import 'screens/daily_log_screen.dart';
 import 'screens/egg_lab_screen.dart';
 import 'screens/history_screen.dart';
+import 'screens/economics_screen.dart';
 import 'screens/settings_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/sync_service.dart';
@@ -69,6 +70,7 @@ class _MainTabContainerState extends State<MainTabContainer> {
     const DailyLogScreen(),
     const EggLabScreen(),
     const HistoryScreen(),
+    const EconomicsScreen(),
     const SettingsScreen(),
   ];
 
@@ -124,6 +126,10 @@ class _MainTabContainerState extends State<MainTabContainer> {
           BottomNavigationBarItem(
             icon: Icon(LucideIcons.history),
             label: 'Data & Export',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(LucideIcons.coins),
+            label: 'Economics',
           ),
           BottomNavigationBarItem(
             icon: Icon(LucideIcons.settings),

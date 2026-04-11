@@ -10,12 +10,16 @@ class StorageService extends ChangeNotifier {
   static const String _treatmentKey = 'treatment';
   static const String _blockKey = 'block';
   static const String _researcherNameKey = 'researcher_name';
+  static const String _feedPriceKey = 'feed_price';
+  static const String _eggPriceKey = 'egg_price';
 
   List<ProductionLog> _productionLogs = [];
   List<EggLog> _eggLogs = [];
   String _treatment = 'T1';
   String _block = '1';
   String _researcherName = '';
+  double _feedPrice = 0.0;
+  double _eggPrice = 0.0;
 
   List<ProductionLog> get productionLogs => _productionLogs.where((l) => !l.isDeleted).toList();
   List<EggLog> get eggLogs => _eggLogs.where((l) => !l.isDeleted).toList();
@@ -26,6 +30,8 @@ class StorageService extends ChangeNotifier {
   String get treatment => _treatment;
   String get block => _block;
   String get researcherName => _researcherName;
+  double get feedPrice => _feedPrice;
+  double get eggPrice => _eggPrice;
 
   bool get isProfileComplete => _researcherName.trim().isNotEmpty;
 
@@ -35,6 +41,8 @@ class StorageService extends ChangeNotifier {
     _treatment = prefs.getString(_treatmentKey) ?? 'T1';
     _block = prefs.getString(_blockKey) ?? '1';
     _researcherName = prefs.getString(_researcherNameKey) ?? '';
+    _feedPrice = prefs.getDouble(_feedPriceKey) ?? 0.0;
+    _eggPrice = prefs.getDouble(_eggPriceKey) ?? 0.0;
 
     final prodString = prefs.getString(_prodLogsKey);
     if (prodString != null) {
@@ -69,6 +77,20 @@ class StorageService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_researcherNameKey, name);
+  }
+
+  void setFeedPrice(double price) async {
+    _feedPrice = price;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_feedPriceKey, price);
+  }
+
+  void setEggPrice(double price) async {
+    _eggPrice = price;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_eggPriceKey, price);
   }
 
   Future<void> addProductionLog(ProductionLog log) async {

@@ -173,7 +173,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
           // Main Content
           Expanded(
             child: DefaultTabController(
-              length: 2,
+              length: 3,
               child: Column(
                 children: [
                   Container(
@@ -185,6 +185,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
                       tabs: [
                         Tab(text: 'Daily Production Data'),
                         Tab(text: 'Egg Lab Quality Data'),
+                        Tab(text: 'Economic Efficiency'),
                       ],
                     ),
                   ),
@@ -193,6 +194,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
                       children: [
                         _buildProductionTable(storage.productionLogs),
                         _buildEggTable(storage.eggLogs),
+                        _buildEconomicTab(context, storage),
                       ],
                     ),
                   ),
@@ -202,6 +204,112 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildEconomicTab(BuildContext context, StorageService storage) {
+    if (storage.productionLogs.isEmpty) {
+      return const Center(child: Text('No production data available for economic analysis.'));
+    }
+
+    final fpCtrl = TextEditingController(text: storage.feedPrice > 0 ? storage.feedPrice.toString() : '');
+    final epCtrl = TextEditingController(text: storage.eggPrice > 0 ? storage.eggPrice.toString() : '');
+
+    final Map<String, List<ProductionLog>> groupedLogs = {};
+    for (var log in storage.productionLogs) {
+      if (!groupedLogs.containsKey(log.treatment)) {
+        groupedLogs[log.treatment] = [];
+      }
+      groupedLogs[log.treatment]!.add(log);
+    }
+    final sortedTreatments = groupedLogs.keys.toList()..sort();
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          color: AppTheme.surfaceLowest,
+          child: Row(
+            children: [
+              const Text('Input Prices:', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 150,
+                child: TextField(
+                  controller: fpCtrl,
+                  decoration: const InputDecoration(labelText: 'Feed Price/kg (\$)', isDense: true),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+              ),
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 150,
+                child: TextField(
+                  controller: epCtrl,
+                  decoration: const InputDecoration(labelText: 'Egg Price/ea (\$)', isDense: true),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+              ),
+              const SizedBox(width: 16),
+              ElevatedButton(
+                onPressed: () {
+                  final fp = double.tryParse(fpCtrl.text) ?? 0.0;
+                  final ep = double.tryParse(epCtrl.text) ?? 0.0;
+                  storage.setFeedPrice(fp);
+                  storage.setEggPrice(ep);
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+                child: const Text('Update Projections', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingTextStyle: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                columns: const [
+                  DataColumn(label: Text('Treatment')),
+                  DataColumn(label: Text('Logs Count')),
+                  DataColumn(label: Text('Total Eggs')),
+                  DataColumn(label: Text('Total Feed (kg)')),
+                  DataColumn(label: Text('Gross Revenue (\$)', style: TextStyle(color: Color(0xFF10B981)))),
+                  DataColumn(label: Text('Feed Cost (\$)', style: TextStyle(color: AppTheme.error))),
+                  DataColumn(label: Text('IOFC (\$)', style: TextStyle(fontWeight: FontWeight.bold))),
+                ],
+                rows: sortedTreatments.map((t) {
+                  final logs = groupedLogs[t]!;
+                  double totalEggs = 0;
+                  double totalFeedGrams = 0;
+                  for (var log in logs) {
+                    totalEggs += log.eggs;
+                    totalFeedGrams += log.feedGiven;
+                  }
+                  final totalFeedKg = totalFeedGrams / 1000;
+                  final feedCost = totalFeedKg * storage.feedPrice;
+                  final grossRevenue = totalEggs * storage.eggPrice;
+                  final iofc = grossRevenue - feedCost;
+
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(t, style: const TextStyle(fontWeight: FontWeight.bold))),
+                      DataCell(Text(logs.length.toString())),
+                      DataCell(Text(totalEggs.toStringAsFixed(0))),
+                      DataCell(Text(totalFeedKg.toStringAsFixed(2))),
+                      DataCell(Text(grossRevenue.toStringAsFixed(2), style: const TextStyle(color: Color(0xFF10B981)))),
+                      DataCell(Text(feedCost.toStringAsFixed(2), style: const TextStyle(color: AppTheme.error))),
+                      DataCell(Text(iofc.toStringAsFixed(2), style: TextStyle(fontWeight: FontWeight.bold, color: iofc >= 0 ? const Color(0xFF047857) : AppTheme.error))),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
