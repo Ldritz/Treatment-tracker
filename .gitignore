@@ -14,7 +14,7 @@ mobile/.flutter-plugins-dependencies
 mobile/pubspec.lock
 
 # Web (React/Vite)
-web/node_modules/
-web/dist/
-web/*.local
-web/.eslintcache
+quail_logger_web/node_modules/
+quail_logger_web/dist/
+quail_logger_web/*.local
+quail_logger_web/.eslintcache

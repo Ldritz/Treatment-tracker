@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Search, Filter, Download } from 'lucide-react';
+import { Search, Filter, Download, Trash2, Loader2 } from 'lucide-react';
 
 const ProductionLogs = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -25,6 +26,26 @@ const ProductionLogs = () => {
       console.error('Error fetching logs:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this log? This cannot be undone.')) return;
+    
+    try {
+      setDeletingId(id);
+      const { error } = await supabase
+        .from('production_logs')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      setLogs(logs.filter(log => log.id !== id));
+    } catch (error) {
+      console.error('Delete failed:', error);
+      alert('Delete failed. Ensure you have permissions to delete records.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -70,6 +91,7 @@ const ProductionLogs = () => {
                   <th>FCR</th>
                   <th>HDEP%</th>
                   <th>Researcher</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -84,11 +106,20 @@ const ProductionLogs = () => {
                     <td>{log.fcr?.toFixed(2) || '-'}</td>
                     <td><span className="badge-blue">{log.hdep?.toFixed(1) || 0}%</span></td>
                     <td>{log.recordedby || '-'}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button 
+                         className="btn-icon-danger" 
+                         onClick={() => handleDelete(log.id)}
+                         disabled={deletingId === log.id}
+                      >
+                        {deletingId === log.id ? <Loader2 size={16} className="spinner" /> : <Trash2 size={16} />}
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {filteredLogs.length === 0 && (
                   <tr>
-                    <td colSpan="9" style={{ textAlign: 'center', padding: '40px' }}>No logs found.</td>
+                    <td colSpan="10" style={{ textAlign: 'center', padding: '40px' }}>No logs found.</td>
                   </tr>
                 )}
               </tbody>

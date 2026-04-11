@@ -140,6 +140,7 @@ export default function Dashboard() {
                 <th>Eggs</th>
                 <th>Feed Intake</th>
                 <th>HDEP</th>
+                <th>Researcher</th>
               </tr>
             </thead>
             <tbody>
@@ -151,11 +152,12 @@ export default function Dashboard() {
                    <td>{log.eggs}</td>
                    <td>{log.feedgiven}g</td>
                    <td><span className="badge" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>{log.hdep ? log.hdep.toFixed(1) : 0}%</span></td>
+                   <td>{log.recordedby || '-'}</td>
                  </tr>
               ))}
               {productionLogs.length === 0 && (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                     No production logs synced yet.
                   </td>
                 </tr>
@@ -176,6 +178,7 @@ export default function Dashboard() {
                 <th>Egg Weight</th>
                 <th>Albumen Ht.</th>
                 <th>Haugh Unit</th>
+                <th>Researcher</th>
               </tr>
             </thead>
             <tbody>
@@ -186,11 +189,12 @@ export default function Dashboard() {
                    <td>{log.weight}g</td>
                    <td>{log.albumenheight}mm</td>
                    <td><span className="badge" style={{ backgroundColor: 'rgba(52, 211, 153, 0.1)', color: '#34d399' }}>{log.haughunit ? log.haughunit.toFixed(1) : 0}</span></td>
+                   <td>{log.recordedby || '-'}</td>
                  </tr>
               ))}
               {eggLogs.length === 0 && (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                     No egg lab logs synced yet.
                   </td>
                 </tr>

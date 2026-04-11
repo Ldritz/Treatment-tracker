@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Search, FlaskConical } from 'lucide-react';
+import { Search, FlaskConical, Trash2, Loader2 } from 'lucide-react';
 
 const EggLabLogs = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -25,6 +26,26 @@ const EggLabLogs = () => {
       console.error('Error fetching logs:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this lab entry?')) return;
+    
+    try {
+      setDeletingId(id);
+      const { error } = await supabase
+        .from('egg_logs')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      setLogs(logs.filter(log => log.id !== id));
+    } catch (error) {
+      console.error('Delete failed:', error);
+      alert('Delete failed. Ensure you have permissions to delete records.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -66,11 +87,13 @@ const EggLabLogs = () => {
                   <th>Weight</th>
                   <th>Length</th>
                   <th>Width</th>
+                  <th>Shape Index</th>
                   <th>Albumen Ht</th>
                   <th>Shell Wt</th>
                   <th>Yolk Wt</th>
                   <th>Haugh Unit</th>
                   <th>Researcher</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -81,16 +104,26 @@ const EggLabLogs = () => {
                     <td>{log.weight?.toFixed(2)}g</td>
                     <td>{log.length?.toFixed(2)}mm</td>
                     <td>{log.width?.toFixed(2)}mm</td>
+                    <td><span className="badge-blue">{log.shapeindex?.toFixed(1) || '-'}</span></td>
                     <td>{log.albumenheight?.toFixed(2)}mm</td>
                     <td>{log.shellweight?.toFixed(2)}g</td>
                     <td>{log.yolkweight?.toFixed(2)}g</td>
                     <td><span className="badge-green">{log.haughunit?.toFixed(1) || 0}</span></td>
                     <td>{log.recordedby || '-'}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button 
+                         className="btn-icon-danger" 
+                         onClick={() => handleDelete(log.id)}
+                         disabled={deletingId === log.id}
+                      >
+                        {deletingId === log.id ? <Loader2 size={16} className="spinner" /> : <Trash2 size={16} />}
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {filteredLogs.length === 0 && (
                   <tr>
-                    <td colSpan="10" style={{ textAlign: 'center', padding: '40px' }}>No egg lab data found.</td>
+                    <td colSpan="12" style={{ textAlign: 'center', padding: '40px' }}>No egg lab data found.</td>
                   </tr>
                 )}
               </tbody>
