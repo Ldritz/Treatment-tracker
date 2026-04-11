@@ -200,11 +200,11 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: StatBox(label: 'HDEP %', value: hdep.toStringAsFixed(1), suffix: '%', color: const Color(0xFF10B981))),
+                StatBox(label: 'HDEP %', value: hdep.toStringAsFixed(1), suffix: '%', color: const Color(0xFF10B981)),
                 const SizedBox(width: 12),
-                Expanded(child: StatBox(label: 'FCR', value: fcr.toStringAsFixed(2), color: AppTheme.primary)),
+                StatBox(label: 'FCR', value: fcr.toStringAsFixed(2), color: AppTheme.primary),
                 const SizedBox(width: 12),
-                Expanded(child: StatBox(label: 'VFI', value: vfi.toStringAsFixed(1), suffix: 'g', color: AppTheme.secondary)),
+                StatBox(label: 'VFI', value: vfi.toStringAsFixed(1), suffix: 'g', color: AppTheme.secondary),
               ],
             ),
             const SizedBox(height: 32),

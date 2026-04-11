@@ -231,11 +231,11 @@ class _EggLabScreenState extends State<EggLabScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: StatBox(label: 'Haugh Unit (HU)', value: haughUnit.toStringAsFixed(1), color: const Color(0xFF818CF8))),
+                StatBox(label: 'Haugh Unit (HU)', value: haughUnit.toStringAsFixed(1), color: const Color(0xFF818CF8)),
                 const SizedBox(width: 8),
-                Expanded(child: StatBox(label: 'Shape Index', value: shapeIndex.toStringAsFixed(1), suffix: '%', color: AppTheme.secondaryLight)),
+                StatBox(label: 'Shape Index', value: shapeIndex.toStringAsFixed(1), suffix: '%', color: AppTheme.secondaryLight),
                 const SizedBox(width: 8),
-                Expanded(child: StatBox(label: 'Yolk %', value: yolkPct.toStringAsFixed(1), suffix: '%', color: const Color(0xFFF59E0B))),
+                StatBox(label: 'Yolk %', value: yolkPct.toStringAsFixed(1), suffix: '%', color: const Color(0xFFF59E0B)),
               ],
             ),
             const SizedBox(height: 32),
