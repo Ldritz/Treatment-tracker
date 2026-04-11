@@ -1,0 +1,363 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import '../helpers/download_stub.dart'
+    if (dart.library.html) '../helpers/download_web.dart';
+import '../services/storage_service.dart';
+import '../services/sync_service.dart';
+import '../models/production_log.dart';
+import '../models/egg_log.dart';
+import '../theme.dart';
+
+class WebDashboardScreen extends StatefulWidget {
+  const WebDashboardScreen({super.key});
+
+  @override
+  State<WebDashboardScreen> createState() => _WebDashboardScreenState();
+}
+
+class _WebDashboardScreenState extends State<WebDashboardScreen> {
+  bool _isAdmin = false;
+  final TextEditingController _passController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-pull from Supabase when the dashboard first opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SyncService>().triggerSync();
+    });
+  }
+
+  void _showAdminLogin() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Admin Login', style: TextStyle(color: AppTheme.textDark)),
+        content: TextField(
+          controller: _passController,
+          obscureText: true,
+          decoration: const InputDecoration(
+            labelText: 'Password',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: AppTheme.textMuted)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+            onPressed: () {
+              if (_passController.text == 'admin123') {
+                setState(() => _isAdmin = true);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Admin edit mode unlocked!'), backgroundColor: AppTheme.secondary));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid password'), backgroundColor: AppTheme.error));
+              }
+              _passController.clear();
+            },
+            child: const Text('Login'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteProductionLog(ProductionLog log) {
+    if (!_isAdmin) return;
+    context.read<StorageService>().deleteProductionLog(log.id);
+  }
+
+  void _deleteEggLabLog(EggLog log) {
+    if (!_isAdmin) return;
+    context.read<StorageService>().deleteEggLog(log.id);
+  }
+
+  void _exportAllCsv(StorageService storage) {
+    String csv = 'ID,Date,Treatment,Block,Eggs,EggMass(g),QuailsAlive,Days,FeedGiven(g),FeedRefusal(g),VFI(g),FCR,HDEP(%)\n';
+    for (var log in storage.productionLogs) {
+      csv += '${log.id},${log.timestamp},${log.treatment},${log.block},${log.eggs},${log.eggMass},${log.quails},${log.days},${log.feedGiven},${log.feedRefusal},${log.vfi},${log.fcr},${log.hdep}\n';
+    }
+    csv += '\nID,Date,Treatment,Block,Weight(g),Length(mm),Width(mm),AlbumenHt(mm),ShellWt(g),YolkWt(g),HaughUnit,ShapeIndex,YolkPct(%)\n';
+    for (var log in storage.eggLogs) {
+      csv += '${log.id},${log.timestamp},${log.treatment},${log.block},${log.weight},${log.length},${log.width},${log.albumenHeight},${log.shellWeight},${log.yolkWeight},${log.haughUnit},${log.shapeIndex},${log.yolkPct}\n';
+    }
+    downloadCsv(csv, 'CoturniSync_All_Data.csv');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final storage = context.watch<StorageService>();
+    final sync = context.watch<SyncService>();
+
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Image.asset('assets/logo.png', width: 32, height: 32),
+            const SizedBox(width: 12),
+            const Text('CoturniSync Web Dashboard', style: TextStyle(color: AppTheme.textDark, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        backgroundColor: AppTheme.surface,
+        elevation: 1,
+        actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.refreshCw, color: AppTheme.primary),
+            tooltip: 'Refresh Data',
+            onPressed: () => sync.triggerSync(),
+          ),
+          const SizedBox(width: 8),
+          Icon(
+            sync.status == SyncState.online ? LucideIcons.cloudLightning : (sync.status == SyncState.syncing ? LucideIcons.refreshCw : LucideIcons.cloudOff),
+            color: sync.status == SyncState.online ? const Color(0xFF10B981) : (sync.status == SyncState.syncing ? AppTheme.primary : AppTheme.error),
+          ),
+          const SizedBox(width: 8),
+          Center(
+            child: Text(
+              sync.status == SyncState.online ? 'Online' : (sync.status == SyncState.syncing ? 'Syncing...' : 'Offline'),
+              style: const TextStyle(color: AppTheme.textDark, fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(width: 24),
+          if (!_isAdmin)
+            TextButton.icon(
+              icon: const Icon(LucideIcons.lock, color: AppTheme.textMuted),
+              label: const Text('Read Only (Login)', style: TextStyle(color: AppTheme.textMuted)),
+              onPressed: _showAdminLogin,
+            )
+          else
+            TextButton.icon(
+              icon: const Icon(LucideIcons.unlock, color: AppTheme.secondary),
+              label: const Text('Admin Mode Active', style: TextStyle(color: AppTheme.secondary)),
+              onPressed: () => setState(() => _isAdmin = false),
+            ),
+          const SizedBox(width: 16),
+        ],
+      ),
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Sidebar
+          Container(
+            width: 250,
+            color: AppTheme.surfaceLowest,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Overview', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textMuted, letterSpacing: 1.2)),
+                const SizedBox(height: 16),
+                _StatTile(title: 'Total Production Logs', value: storage.productionLogs.length.toString(), icon: LucideIcons.clipboardList),
+                const SizedBox(height: 12),
+                _StatTile(title: 'Total Egg Lab Logs', value: storage.eggLogs.length.toString(), icon: LucideIcons.egg),
+                const Spacer(),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  icon: const Icon(LucideIcons.download),
+                  label: const Text('Export All CSV'),
+                  onPressed: () => _exportAllCsv(storage),
+                ),
+              ],
+            ),
+          ),
+          // Main Content
+          Expanded(
+            child: DefaultTabController(
+              length: 2,
+              child: Column(
+                children: [
+                  Container(
+                    color: AppTheme.surface,
+                    child: const TabBar(
+                      labelColor: AppTheme.primary,
+                      unselectedLabelColor: AppTheme.textMuted,
+                      indicatorColor: AppTheme.primary,
+                      tabs: [
+                        Tab(text: 'Daily Production Data'),
+                        Tab(text: 'Egg Lab Quality Data'),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        _buildProductionTable(storage.productionLogs),
+                        _buildEggTable(storage.eggLogs),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductionTable(List<ProductionLog> logs) {
+    if (logs.isEmpty) {
+      return const Center(child: Text('No daily production data synced yet.'));
+    }
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          headingTextStyle: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark),
+          dataRowMinHeight: 48,
+          dataRowMaxHeight: 48,
+          columns: [
+            const DataColumn(label: Text('Date')),
+            const DataColumn(label: Text('Treatment')),
+            const DataColumn(label: Text('Block')),
+            const DataColumn(label: Text('Birds Alive')),
+            const DataColumn(label: Text('Eggs')),
+            const DataColumn(label: Text('Egg Mass (g)')),
+            const DataColumn(label: Text('Feed (g)')),
+            const DataColumn(label: Text('Refusal (g)')),
+            const DataColumn(label: Text('VFI')),
+            const DataColumn(label: Text('FCR')),
+            const DataColumn(label: Text('HDEP%')),
+            if (_isAdmin) const DataColumn(label: Text('Actions')),
+          ],
+          rows: logs.map((log) {
+            final date = DateTime.parse(log.timestamp).toLocal().toString().split(' ')[0];
+            return DataRow(
+              cells: [
+                DataCell(Text(date)),
+                DataCell(Text(log.treatment)),
+                DataCell(Text(log.block)),
+                DataCell(Text(log.quails.toStringAsFixed(0))),
+                DataCell(Text(log.eggs.toStringAsFixed(0))),
+                DataCell(Text(log.eggMass.toStringAsFixed(1))),
+                DataCell(Text(log.feedGiven.toStringAsFixed(1))),
+                DataCell(Text(log.feedRefusal.toStringAsFixed(1))),
+                DataCell(Text(log.vfi.toStringAsFixed(1))),
+                DataCell(Text(log.fcr.toStringAsFixed(2))),
+                DataCell(Text(log.hdep.toStringAsFixed(1))),
+                if (_isAdmin)
+                  DataCell(
+                    IconButton(
+                      icon: const Icon(LucideIcons.trash2, color: AppTheme.error, size: 18),
+                      onPressed: () => _deleteProductionLog(log),
+                    ),
+                  ),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEggTable(List<EggLog> logs) {
+    if (logs.isEmpty) {
+      return const Center(child: Text('No egg lab data synced yet.'));
+    }
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          headingTextStyle: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark),
+          dataRowMinHeight: 48,
+          dataRowMaxHeight: 48,
+          columns: [
+            const DataColumn(label: Text('Date')),
+            const DataColumn(label: Text('Treatment')),
+            const DataColumn(label: Text('Block')),
+            const DataColumn(label: Text('Egg Wt (g)')),
+            const DataColumn(label: Text('Length (mm)')),
+            const DataColumn(label: Text('Width (mm)')),
+            const DataColumn(label: Text('Alb Ht (mm)')),
+            const DataColumn(label: Text('Shell Wt (g)')),
+            const DataColumn(label: Text('Yolk Wt (g)')),
+            const DataColumn(label: Text('Haugh Unit')),
+            const DataColumn(label: Text('Shape Index')),
+            const DataColumn(label: Text('Yolk %')),
+            if (_isAdmin) const DataColumn(label: Text('Actions')),
+          ],
+          rows: logs.map((log) {
+            final date = DateTime.parse(log.timestamp).toLocal().toString().split(' ')[0];
+            return DataRow(
+              cells: [
+                DataCell(Text(date)),
+                DataCell(Text(log.treatment)),
+                DataCell(Text(log.block)),
+                DataCell(Text(log.weight.toStringAsFixed(2))),
+                DataCell(Text(log.length.toStringAsFixed(2))),
+                DataCell(Text(log.width.toStringAsFixed(2))),
+                DataCell(Text(log.albumenHeight.toStringAsFixed(2))),
+                DataCell(Text(log.shellWeight.toStringAsFixed(2))),
+                DataCell(Text(log.yolkWeight.toStringAsFixed(2))),
+                DataCell(Text(log.haughUnit.toStringAsFixed(2))),
+                DataCell(Text(log.shapeIndex.toStringAsFixed(2))),
+                DataCell(Text(log.yolkPct.toStringAsFixed(2))),
+                 if (_isAdmin)
+                  DataCell(
+                    IconButton(
+                      icon: const Icon(LucideIcons.trash2, color: AppTheme.error, size: 18),
+                      onPressed: () => _deleteEggLabLog(log),
+                    ),
+                  ),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+
+  const _StatTile({required this.title, required this.value, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.surfaceHighest),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppTheme.primary, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                Text(title, style: const TextStyle(fontSize: 12, color: AppTheme.textMuted)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

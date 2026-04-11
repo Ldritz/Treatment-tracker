@@ -1,0 +1,136 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+import 'theme.dart';
+import 'services/storage_service.dart';
+import 'screens/splash_screen.dart';
+import 'screens/web_dashboard_screen.dart';
+import 'screens/daily_log_screen.dart';
+import 'screens/egg_lab_screen.dart';
+import 'screens/history_screen.dart';
+import 'screens/settings_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'services/sync_service.dart';
+
+// Initialize Supabase keys
+const supabaseUrl = 'https://lpyxwxfmshuwwogalkfd.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxweXh3eGZtc2h1d3dvZ2Fsa2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MDEzNDAsImV4cCI6MjA5MTM3NzM0MH0.pWDpmmWQDugls7-SDNI5gWUk-ImkdE6ksYxxrS7dwfU';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final storageService = StorageService();
+  await storageService.init();
+
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+  );
+
+  final syncService = SyncService(storageService);
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: storageService),
+        ChangeNotifierProvider.value(value: syncService),
+      ],
+      child: const QuailLoggerApp(),
+    ),
+  );
+}
+
+class QuailLoggerApp extends StatelessWidget {
+  const QuailLoggerApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Quail Logger',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.themeData,
+      home: kIsWeb ? const WebDashboardScreen() : const SplashScreen(),
+    );
+  }
+}
+
+class MainTabContainer extends StatefulWidget {
+  const MainTabContainer({super.key});
+
+  @override
+  State<MainTabContainer> createState() => _MainTabContainerState();
+}
+
+class _MainTabContainerState extends State<MainTabContainer> {
+  int _currentIndex = 0;
+
+  final List<Widget> _screens = [
+    const DailyLogScreen(),
+    const EggLabScreen(),
+    const HistoryScreen(),
+    const SettingsScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Quail Logger', style: TextStyle(color: AppTheme.textDark, fontWeight: FontWeight.bold)),
+        backgroundColor: AppTheme.surface,
+        elevation: 0,
+        actions: [
+          Consumer<SyncService>(
+            builder: (context, sync, child) {
+              IconData icon;
+              Color color;
+              if (sync.status == SyncState.online) {
+                icon = LucideIcons.cloudLightning;
+                color = const Color(0xFF10B981); // Emerald
+              } else if (sync.status == SyncState.syncing) {
+                icon = LucideIcons.refreshCw;
+                color = AppTheme.primary;
+              } else {
+                icon = LucideIcons.cloudOff;
+                color = AppTheme.error;
+              }
+              return Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: Icon(icon, color: color, size: 24),
+              );
+            },
+          ),
+        ],
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppTheme.primary,
+        unselectedItemColor: AppTheme.textMuted,
+        onTap: (index) => setState(() => _currentIndex = index),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(LucideIcons.clipboardList),
+            label: 'Daily Logs',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(LucideIcons.egg),
+            label: 'Egg Lab',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(LucideIcons.history),
+            label: 'Data & Export',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(LucideIcons.settings),
+            label: 'Settings',
+          ),
+        ],
+      ),
+    );
+  }
+}
