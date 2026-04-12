@@ -1,4 +1,4 @@
-package com.example.quail_logger_flutter
+package com.coturnisync.quail_logger
 
 import io.flutter.embedding.android.FlutterActivity
 
