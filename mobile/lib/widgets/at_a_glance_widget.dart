@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../services/storage_service.dart';
-import 'trend_chart.dart';
 
 class AtAGlanceWidget extends StatelessWidget {
   final bool isDailyMode;
@@ -193,30 +192,6 @@ class AtAGlanceWidget extends StatelessWidget {
               Expanded(child: _buildBlockProgress('Block 2', block2Treatments.length)),
               const SizedBox(width: 16),
               Expanded(child: _buildBlockProgress('Block 3', block3Treatments.length)),
-            ],
-          ),
-          const SizedBox(height: 28),
-          const Divider(color: Colors.white24, height: 1),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: TrendChart(
-                  label: 'HDEP Trend (%)',
-                  dataPoints: storage.productionLogs.take(7).map((e) => e.hdep).toList().reversed.toList(),
-                  color: const Color(0xFF10B981),
-                  maxY: 100,
-                ),
-              ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: TrendChart(
-                  label: 'VFI Trend (g)',
-                  dataPoints: storage.productionLogs.take(7).map((e) => e.vfi).toList().reversed.toList(),
-                  color: const Color(0xFFF59E0B),
-                  maxY: 45, // Quail VFI is usually around 25-35g
-                ),
-              ),
             ],
           ),
         ],
