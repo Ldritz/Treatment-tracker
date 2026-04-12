@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
-import { Coins, TrendingUp, Calculator } from 'lucide-react';
+import { Coins, TrendingUp } from 'lucide-react';
 
 const Economics = () => {
   const [logs, setLogs] = useState([]);
@@ -28,13 +28,18 @@ const Economics = () => {
   };
 
   // Group and calculate
-  const groupedData = logs.reduce((acc, log) => {
-    if (!acc[log.treatment]) acc[log.treatment] = { eggs: 0, feed: 0, count: 0 };
-    acc[log.treatment].eggs += log.eggs || 0;
-    acc[log.treatment].feed += (log.feedgiven || 0) / 1000; // Convert to kg
-    acc[log.treatment].count += 1;
+  const groupedData = useMemo(() => {
+    const acc = {};
+    const len = logs.length;
+    for (let i = 0; i < len; i++) {
+      const log = logs[i];
+      if (!acc[log.treatment]) acc[log.treatment] = { eggs: 0, feed: 0, count: 0 };
+      acc[log.treatment].eggs += log.eggs || 0;
+      acc[log.treatment].feed += (log.feedgiven || 0) / 1000; // Convert to kg
+      acc[log.treatment].count += 1;
+    }
     return acc;
-  }, {});
+  }, [logs]);
 
   return (
     <div className="page-container">
