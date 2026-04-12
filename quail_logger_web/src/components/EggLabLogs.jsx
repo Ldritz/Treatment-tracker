@@ -113,6 +113,7 @@ const EggLabLogs = () => {
                     <td style={{ textAlign: 'right' }}>
                       <button 
                          className="btn-icon-danger" 
+                         aria-label="Delete lab entry"
                          onClick={() => handleDelete(log.id)}
                          disabled={deletingId === log.id}
                       >
