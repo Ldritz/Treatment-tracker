@@ -15,7 +15,7 @@ export async function GET() {
     // Generate CSV
     const headers = ['Date', 'Block', 'Treatment', 'Live Quails', 'Eggs Laid', 'Egg Mass (g)', 'Feed Intake (g)', 'Feed Refused (g)']
 
-    let csv = headers.join(',') + '\n'
+    const csvRows = [headers.join(',')]
 
     logs.forEach(log => {
       const row = [
@@ -28,8 +28,10 @@ export async function GET() {
         log.feedIntake,
         log.feedRefused
       ]
-      csv += row.join(',') + '\n'
+      csvRows.push(row.join(','))
     })
+
+    const csv = csvRows.join('\n') + '\n'
 
     return new NextResponse(csv, {
       status: 200,

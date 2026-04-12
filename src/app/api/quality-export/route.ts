@@ -21,7 +21,7 @@ export async function GET() {
       'Yolk Percentage (%)', 'Shell Percentage (%)', 'Haugh Unit'
     ]
 
-    let csv = headers.join(',') + '\n'
+    const csvRows = [headers.join(',')]
 
     logs.forEach(log => {
       // Calculate averages and derived metrics for export
@@ -81,8 +81,10 @@ export async function GET() {
         shellPct,
         hu
       ]
-      csv += row.join(',') + '\n'
+      csvRows.push(row.join(','))
     })
+
+    const csv = csvRows.join('\n') + '\n'
 
     return new NextResponse(csv, {
       status: 200,
