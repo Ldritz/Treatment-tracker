@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { Loader2, TrendingUp, Egg, Activity, Smartphone, X } from 'lucide-react';
+import { Loader2, TrendingUp, Egg, Activity, Smartphone, X, ChartLine } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import TrendChart from './TrendChart.jsx';
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -76,6 +77,16 @@ export default function Dashboard() {
     }
   }
 
+  // Process data for charts (last 7 logs)
+  const chartData = [...productionLogs]
+    .slice(0, 7)
+    .reverse()
+    .map(log => ({
+      date: new Date(log.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+      hdep: log.hdep || 0,
+      vfi: log.vfi || 0
+    }));
+
   if (loading) {
     return (
       <div className="loading">
@@ -128,7 +139,31 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <h3 style={{ marginBottom: '1.5rem' }}>Recent Production Logs</h3>
+      <div className="section-header">
+        <h3>Performance Trends (Last 7 Days)</h3>
+        <p>Scientific stability tracking across all experimental units</p>
+      </div>
+
+      <div className="charts-container fade-in delay-2">
+        <TrendChart 
+          title="HDEP Trend" 
+          data={chartData} 
+          color="#10B981" 
+          dataKey="hdep" 
+          maxY={100} 
+          unit="%" 
+        />
+        <TrendChart 
+          title="VFI Trend" 
+          data={chartData} 
+          color="#F59E0B" 
+          dataKey="vfi" 
+          maxY={45} 
+          unit="g" 
+        />
+      </div>
+
+      <h3 style={{ marginBottom: '1.5rem', marginTop: '3rem' }}>Recent Production Logs</h3>
       <div className="table-container fade-in delay-2" style={{ marginBottom: '3rem' }}>
         <div className="table-wrapper">
           <table>

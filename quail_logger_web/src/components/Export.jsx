@@ -13,19 +13,22 @@ const Export = () => {
       const { data: prodLogs } = await supabase.from('production_logs').select('*').order('timestamp');
       const { data: eggLogs } = await supabase.from('egg_logs').select('*').order('timestamp');
 
-      let csvContent = 'SECTION: DAILY PRODUCTION DATA\n';
-      csvContent += 'ID,Date,Treatment,Block,Quails,Eggs,EggMass(g),FeedGiven(g),FCR,HDEP(%),RecordedBy\n';
+      const rows = [];
+      rows.push('SECTION: DAILY PRODUCTION DATA');
+      rows.push('ID,Date,Treatment,Block,Quails,Eggs,EggMass(g),FeedGiven(g),FCR,HDEP(%),RecordedBy');
       
       prodLogs?.forEach(log => {
-        csvContent += `${log.id},${log.timestamp},${log.treatment},${log.block},${log.quails},${log.eggs},${log.eggmass},${log.feedgiven},${log.fcr},${log.hdep},"${log.recordedby || ''}"\n`;
+        rows.push(`${log.id},${log.timestamp},${log.treatment},${log.block},${log.quails},${log.eggs},${log.eggmass},${log.feedgiven},${log.fcr},${log.hdep},"${log.recordedby || ''}"`);
       });
 
-      csvContent += '\n\nSECTION: EGG QUALITY DATA\n';
-      csvContent += 'ID,Date,Treatment,Block,Weight(g),Length(mm),Width(mm),AlbumenHt(mm),ShellWt(g),YolkWt(g),HaughUnit,RecordedBy\n';
+      rows.push('\n\nSECTION: EGG QUALITY DATA');
+      rows.push('ID,Date,Treatment,Block,Weight(g),Length(mm),Width(mm),AlbumenHt(mm),ShellWt(g),YolkWt(g),HaughUnit,RecordedBy');
 
       eggLogs?.forEach(log => {
-        csvContent += `${log.id},${log.timestamp},${log.treatment},${log.block},${log.weight},${log.length},${log.width},${log.albumenheight},${log.shellweight},${log.yolkweight},${log.haughunit},"${log.recordedby || ''}"\n`;
+        rows.push(`${log.id},${log.timestamp},${log.treatment},${log.block},${log.weight},${log.length},${log.width},${log.albumenheight},${log.shellweight},${log.yolkweight},${log.haughunit},"${log.recordedby || ''}"`);
       });
+
+      const csvContent = rows.join('\n');
 
       // Create download link
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
