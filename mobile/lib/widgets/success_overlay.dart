@@ -1,6 +1,7 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../theme.dart';
 
 class SuccessOverlay extends StatefulWidget {
   final String message;
@@ -48,6 +49,9 @@ class _SuccessOverlayState extends State<SuccessOverlay> with SingleTickerProvid
       ),
     );
 
+    // Provide haptic feedback
+    HapticFeedback.mediumImpact();
+
     _controller.forward().then((_) {
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (mounted) {
@@ -73,40 +77,47 @@ class _SuccessOverlayState extends State<SuccessOverlay> with SingleTickerProvid
           opacity: _opacityAnimation,
           child: ScaleTransition(
             scale: _scaleAnimation,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2), 
-                    blurRadius: 40,
-                    offset: const Offset(0, 10)
-                  )
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF10B981),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(LucideIcons.check, color: Colors.white, size: 40),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2), 
+                        blurRadius: 40,
+                        offset: const Offset(0, 10)
+                      )
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.message,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: theme.textTheme.displaySmall?.color,
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF10B981),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(LucideIcons.check, color: Colors.white, size: 40),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        widget.message,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: theme.textTheme.displaySmall?.color,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),

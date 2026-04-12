@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../services/storage_service.dart';
-import '../theme.dart';
 import 'formula_reference_screen.dart';
 import '../widgets/sync_pairing_dialog.dart';
 import '../services/sync_service.dart';
@@ -27,7 +26,7 @@ class SettingsScreen extends StatelessWidget {
             labelText: 'Full Name',
             labelStyle: TextStyle(color: theme.textTheme.bodySmall?.color),
             hintText: 'Enter your name',
-            hintStyle: TextStyle(color: theme.textTheme.bodySmall?.color?.withOpacity(0.5)),
+            hintStyle: TextStyle(color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5)),
           ),
           autofocus: true,
         ),
@@ -97,7 +96,7 @@ class SettingsScreen extends StatelessWidget {
     return Text(
       title.toUpperCase(),
       style: TextStyle(
-        color: theme.brightness == Brightness.dark ? const Color(0xFF94A3B8) : theme.primaryColor.withOpacity(0.7),
+        color: theme.brightness == Brightness.dark ? const Color(0xFF94A3B8) : theme.primaryColor.withValues(alpha: 0.7),
         fontSize: 11,
         fontWeight: FontWeight.bold,
         letterSpacing: 1.5,
@@ -158,7 +157,7 @@ class SettingsScreen extends StatelessWidget {
                 child: Text(
                   'QUAIL LOGGER v1.0.0',
                   style: TextStyle(
-                    color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.3),
+                    color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.3),
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.5,
@@ -178,9 +177,9 @@ class SettingsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withOpacity(0.5),
+        color: theme.colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
@@ -227,7 +226,7 @@ class SettingsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
@@ -239,7 +238,7 @@ class SettingsScreen extends StatelessWidget {
             iconColor: !isDark ? theme.primaryColor : const Color(0xFF64748B), 
             leading: !isDark ? LucideIcons.checkCircle : LucideIcons.circle
           ),
-          Divider(height: 1, color: theme.dividerColor.withOpacity(0.05)),
+          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.05)),
           _buildActionItem(
             context,
             'Dark Mode', 
@@ -259,7 +258,7 @@ class SettingsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: _buildActionItem(
         context,
@@ -277,12 +276,12 @@ class SettingsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
           _buildActionItem(context, 'Clear Daily Logs', LucideIcons.trash2, () => _clearLogs(context, true), iconColor: const Color(0xFFF43F5E)),
-          Divider(height: 1, color: theme.dividerColor.withOpacity(0.05)),
+          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.05)),
           _buildActionItem(context, 'Clear Egg Lab Logs', LucideIcons.eraser, () => _clearLogs(context, false), iconColor: const Color(0xFFF43F5E)),
         ],
       ),
@@ -295,14 +294,14 @@ class SettingsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
           _buildActionItem(context, 'Formulas Reference', LucideIcons.calculator, () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const FormulaReferenceScreen()));
           }, iconColor: Theme.of(context).primaryColor),
-          Divider(height: 1, color: theme.dividerColor.withOpacity(0.05)),
+          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.05)),
           _buildActionItem(context, 'About Quail Logger', LucideIcons.info, () {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Version 1.0.0 - Built for Researcher Excellence')));
           }, iconColor: const Color(0xFF64748B)),
@@ -352,7 +351,7 @@ class SettingsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
@@ -424,7 +423,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           
-          Divider(height: 1, color: theme.dividerColor.withOpacity(0.1)),
+          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
 
           // Row 2: Server Info
           if (isConnected)
@@ -450,7 +449,7 @@ class SettingsScreen extends StatelessWidget {
                         Text(
                           storage.syncUrl ?? 'N/A',
                           style: TextStyle(
-                            color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                            color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                             fontSize: 13,
                           ),
                         ),

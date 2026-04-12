@@ -9,7 +9,6 @@ import '../widgets/custom_button.dart';
 import '../widgets/farm_grid_layout.dart';
 import '../widgets/at_a_glance_widget.dart';
 import '../widgets/success_overlay.dart';
-import '../theme.dart';
 
 class DailyLogScreen extends StatefulWidget {
   const DailyLogScreen({super.key});
@@ -32,6 +31,11 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
   double _feedGivenNum = 90;
   double _feedRefusalNum = 0;
 
+  String? _eggsError;
+  String? _eggMassError;
+  String? _quailsError;
+  String? _feedRefusalError;
+
   @override
   void initState() {
     super.initState();
@@ -45,9 +49,38 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
   void _calcStats() {
     setState(() {
       _eggsNum = double.tryParse(_eggsCtrl.text) ?? 0;
+      if (_eggsCtrl.text.isNotEmpty) {
+        if (_eggsNum < 0 || _eggsNum > 20) {
+          _eggsError = 'Range: 0-20';
+        } else {
+          _eggsError = null;
+        }
+      } else {
+        _eggsError = null;
+      }
+
       _eggMassNum = double.tryParse(_eggMassCtrl.text) ?? 0;
+      if (_eggMassCtrl.text.isNotEmpty) {
+        if (_eggMassNum < 0 || _eggMassNum > 250) {
+          _eggMassError = 'Range: 0-250g';
+        } else {
+          _eggMassError = null;
+        }
+      } else {
+        _eggMassError = null;
+      }
       
       double parsedQuails = double.tryParse(_quailsCtrl.text) ?? 3;
+      if (_quailsCtrl.text.isNotEmpty) {
+        if (parsedQuails < 1 || parsedQuails > 50) {
+          _quailsError = 'Range: 1-50';
+        } else {
+          _quailsError = null;
+        }
+      } else {
+        _quailsError = null;
+      }
+
       if (parsedQuails == 0) parsedQuails = 1;
 
       if (parsedQuails != _quailsNum) {
@@ -60,6 +93,15 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
 
       _feedGivenNum = double.tryParse(_feedGivenCtrl.text) ?? 0;
       _feedRefusalNum = double.tryParse(_feedRefusalCtrl.text) ?? 0;
+      if (_feedRefusalCtrl.text.isNotEmpty) {
+        if (_feedRefusalNum < 0 || _feedRefusalNum > _feedGivenNum * 1.5) {
+          _feedRefusalError = 'Improbable value';
+        } else {
+          _feedRefusalError = null;
+        }
+      } else {
+        _feedRefusalError = null;
+      }
     });
   }
 
@@ -123,7 +165,6 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -137,9 +178,9 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withOpacity(0.5),
+                color: theme.colorScheme.surface.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
               ),
               child: const FarmGridLayout(indicatorContext: 'daily'),
             ),
@@ -153,9 +194,9 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
               children: [
                 Row(
                   children: [
-                    Expanded(child: InputCard(label: 'Number of Eggs', placeholder: '#', controller: _eggsCtrl, action: TextInputAction.next)),
+                    Expanded(child: InputCard(label: 'Number of Eggs', placeholder: '#', controller: _eggsCtrl, action: TextInputAction.next, errorText: _eggsError)),
                     const SizedBox(width: 12),
-                    Expanded(child: InputCard(label: 'Egg Mass (g)', placeholder: '0.0', controller: _eggMassCtrl, action: TextInputAction.next)),
+                    Expanded(child: InputCard(label: 'Egg Mass (g)', placeholder: '0.0', controller: _eggMassCtrl, action: TextInputAction.next, errorText: _eggMassError)),
                   ],
                 ),
               ],
@@ -171,9 +212,9 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
               children: [
                 Row(
                   children: [
-                    Expanded(child: InputCard(label: 'Birds Alive', placeholder: '#', controller: _quailsCtrl, action: TextInputAction.next)),
+                    Expanded(child: InputCard(label: 'Birds Alive', placeholder: '#', controller: _quailsCtrl, action: TextInputAction.next, errorText: _quailsError)),
                     const SizedBox(width: 12),
-                    Expanded(child: InputCard(label: 'Feed Refusal (g)', placeholder: '0.0', controller: _feedRefusalCtrl, action: TextInputAction.done)),
+                    Expanded(child: InputCard(label: 'Feed Refusal (g)', placeholder: '0.0', controller: _feedRefusalCtrl, action: TextInputAction.done, errorText: _feedRefusalError)),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -182,7 +223,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                   decoration: BoxDecoration(
                     color: theme.scaffoldBackgroundColor,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                    border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
                   ),
                   child: Row(
                     children: [
@@ -241,10 +282,10 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
         boxShadow: theme.brightness == Brightness.dark ? [] : [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'storage_service.dart';
 import '../models/production_log.dart';
 import '../models/egg_log.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 enum SyncState { online, syncing, offline, disabled }
 
@@ -88,8 +89,8 @@ class SyncService with ChangeNotifier {
       if (kIsWeb) {
         // Fallback to default project for web dashboard
         _supabase = SupabaseClient(
-          'https://lpyxwxfmshuwwogalkfd.supabase.co',
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxweXh3eGZtc2h1d3dvZ2Fsa2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MDEzNDAsImV4cCI6MjA5MTM3NzM0MH0.pWDpmmWQDugls7-SDNI5gWUk-ImkdE6ksYxxrS7dwfU',
+          dotenv.env['SUPABASE_URL'] ?? '',
+          dotenv.env['SUPABASE_ANON_KEY'] ?? '',
         );
         return true;
       }
@@ -170,9 +171,7 @@ class SyncService with ChangeNotifier {
           return json;
         }).toList();
         await _supabase!.from('production_logs').upsert(prodData);
-        for (var log in unsyncedProdLogs) {
-          await storageService.markProductionLogSynced(log.id);
-        }
+        await storageService.markProductionLogsSynced(unsyncedProdLogs.map((l) => l.id).toList());
       }
 
       if (unsyncedEggLogs.isNotEmpty) {
@@ -184,9 +183,7 @@ class SyncService with ChangeNotifier {
           return json;
         }).toList();
         await _supabase!.from('egg_logs').upsert(eggData);
-        for (var log in unsyncedEggLogs) {
-          await storageService.markEggLogSynced(log.id);
-        }
+        await storageService.markEggLogsSynced(unsyncedEggLogs.map((l) => l.id).toList());
       }
       
       _setStatus(SyncState.online);

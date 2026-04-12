@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme.dart';
 
 class StatBox extends StatelessWidget {
   final String label;
@@ -29,10 +28,10 @@ class StatBox extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isDark 
-              ? themeColor.withOpacity(0.1) 
-              : (themeColor == theme.primaryColor ? theme.primaryColor.withOpacity(0.1) : themeColor.withOpacity(0.15)),
+              ? themeColor.withValues(alpha: 0.1) 
+              : (themeColor == theme.primaryColor ? theme.primaryColor.withValues(alpha: 0.1) : themeColor.withValues(alpha: 0.15)),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: themeColor.withOpacity(0.2)),
+          border: Border.all(color: themeColor.withValues(alpha: 0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,7 +40,7 @@ class StatBox extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 14, 
-                color: theme.textTheme.displaySmall?.color?.withOpacity(0.7), 
+                color: theme.textTheme.displaySmall?.color?.withValues(alpha: 0.7), 
                 fontWeight: FontWeight.w500
               ),
             ),

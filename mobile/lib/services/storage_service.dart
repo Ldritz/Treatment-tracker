@@ -4,6 +4,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/production_log.dart';
 import '../models/egg_log.dart';
 
+class TreatmentSummary {
+  final String treatment;
+  final int logCount;
+  final double totalEggs;
+  final double totalFeedKg;
+  final double grossRevenue;
+  final double feedCost;
+  final double iofc;
+
+  TreatmentSummary({
+    required this.treatment,
+    required this.logCount,
+    required this.totalEggs,
+    required this.totalFeedKg,
+    required this.grossRevenue,
+    required this.feedCost,
+    required this.iofc,
+  });
+}
+
 class StorageService extends ChangeNotifier {
   static const String _prodLogsKey = 'production_logs';
   static const String _eggLogsKey = 'egg_logs';
@@ -26,6 +46,7 @@ class StorageService extends ChangeNotifier {
   String? _syncUrl;
   String? _syncKey;
   bool _isDarkMode = false;
+  List<TreatmentSummary> _treatmentSummaries = [];
 
   List<ProductionLog> get productionLogs => _productionLogs.where((l) => !l.isDeleted).toList();
   List<EggLog> get eggLogs => _eggLogs.where((l) => !l.isDeleted).toList();
@@ -43,6 +64,7 @@ class StorageService extends ChangeNotifier {
   String? get syncUrl => _syncUrl;
   String? get syncKey => _syncKey;
   bool get isDarkMode => _isDarkMode;
+  List<TreatmentSummary> get treatmentSummaries => _treatmentSummaries;
 
   bool get isProfileComplete => _researcherName.trim().isNotEmpty;
 
@@ -69,6 +91,7 @@ class StorageService extends ChangeNotifier {
       final List<dynamic> decoded = jsonDecode(eggString);
       _eggLogs = decoded.map((e) => EggLog.fromJson(e)).toList();
     }
+    _calculateEconomics();
     notifyListeners();
   }
 
@@ -213,18 +236,38 @@ class StorageService extends ChangeNotifier {
   }
 
   Future<void> markProductionLogSynced(String id) async {
-    final index = _productionLogs.indexWhere((l) => l.id == id);
-    if (index != -1) {
-      _productionLogs[index] = _productionLogs[index].copyWith(isSynced: true);
+    await markProductionLogsSynced([id]);
+  }
+
+  Future<void> markEggLogSynced(String id) async {
+    await markEggLogsSynced([id]);
+  }
+
+  Future<void> markProductionLogsSynced(List<String> ids) async {
+    bool changed = false;
+    for (var id in ids) {
+      final index = _productionLogs.indexWhere((l) => l.id == id);
+      if (index != -1 && !_productionLogs[index].isSynced) {
+        _productionLogs[index] = _productionLogs[index].copyWith(isSynced: true);
+        changed = true;
+      }
+    }
+    if (changed) {
       notifyListeners();
       await _saveData(_prodLogsKey, _productionLogs.map((e) => e.toJson()).toList());
     }
   }
 
-  Future<void> markEggLogSynced(String id) async {
-    final index = _eggLogs.indexWhere((l) => l.id == id);
-    if (index != -1) {
-      _eggLogs[index] = _eggLogs[index].copyWith(isSynced: true);
+  Future<void> markEggLogsSynced(List<String> ids) async {
+    bool changed = false;
+    for (var id in ids) {
+      final index = _eggLogs.indexWhere((l) => l.id == id);
+      if (index != -1 && !_eggLogs[index].isSynced) {
+        _eggLogs[index] = _eggLogs[index].copyWith(isSynced: true);
+        changed = true;
+      }
+    }
+    if (changed) {
       notifyListeners();
       await _saveData(_eggLogsKey, _eggLogs.map((e) => e.toJson()).toList());
     }
@@ -318,5 +361,51 @@ class StorageService extends ChangeNotifier {
   Future<void> _saveData(String key, List<Map<String, dynamic>> data) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(key, jsonEncode(data));
+    
+    // Recalculate economics if logs were changed
+    if (key == _prodLogsKey || key == _eggLogsKey) {
+      _calculateEconomics();
+    }
+  }
+
+  void _calculateEconomics() {
+    if (_productionLogs.isEmpty) {
+      _treatmentSummaries = [];
+      return;
+    }
+
+    final Map<String, List<ProductionLog>> grouped = {};
+    for (var log in productionLogs) { // Using getter to respect isDeleted
+      if (!grouped.containsKey(log.treatment)) {
+        grouped[log.treatment] = [];
+      }
+      grouped[log.treatment]!.add(log);
+    }
+
+    final sortedKeys = grouped.keys.toList()..sort();
+    
+    _treatmentSummaries = sortedKeys.map((t) {
+      final logs = grouped[t]!;
+      double totalEggs = 0;
+      double totalFeedGrams = 0;
+      for (var log in logs) {
+        totalEggs += log.eggs;
+        totalFeedGrams += log.feedGiven;
+      }
+      final totalFeedKg = totalFeedGrams / 1000;
+      final feedCost = totalFeedKg * _feedPrice;
+      final grossRevenue = totalEggs * _eggPrice;
+      final iofc = grossRevenue - feedCost;
+
+      return TreatmentSummary(
+        treatment: t,
+        logCount: logs.length,
+        totalEggs: totalEggs,
+        totalFeedKg: totalFeedKg,
+        grossRevenue: grossRevenue,
+        feedCost: feedCost,
+        iofc: iofc,
+      );
+    }).toList();
   }
 }

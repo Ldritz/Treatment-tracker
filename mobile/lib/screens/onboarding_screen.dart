@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../services/storage_service.dart';
-import '../theme.dart';
 import '../main.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -48,7 +47,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: theme.primaryColor.withOpacity(0.1),
+                    color: theme.primaryColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -85,7 +84,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     labelText: 'Full Name',
                     labelStyle: TextStyle(color: theme.textTheme.bodySmall?.color),
                     hintText: 'e.g. Dr. Jane Smith',
-                    hintStyle: TextStyle(color: theme.textTheme.bodySmall?.color?.withOpacity(0.5)),
+                    hintStyle: TextStyle(color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5)),
                     prefixIcon: Icon(LucideIcons.user, color: theme.textTheme.bodySmall?.color),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),

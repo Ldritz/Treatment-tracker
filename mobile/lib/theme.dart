@@ -74,8 +74,8 @@ class AppTheme {
         displayMedium: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
         displaySmall: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
         bodyLarge: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white),
-        bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.white.withOpacity(0.9)),
-        bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white.withOpacity(0.6)),
+        bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.white.withValues(alpha: 0.9)),
+        bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white.withValues(alpha: 0.6)),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF1E293B),

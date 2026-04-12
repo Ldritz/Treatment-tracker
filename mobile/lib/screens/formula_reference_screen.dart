@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../theme.dart';
 
 class FormulaReferenceScreen extends StatelessWidget {
   const FormulaReferenceScreen({super.key});
@@ -42,7 +41,7 @@ class FormulaReferenceScreen extends StatelessWidget {
             description: 'The efficiency of converting feed into egg mass. A lower FCR indicates a more feed-efficient treatment group.',
             unit: 'unitless ratio',
             icon: LucideIcons.arrowLeftRight,
-            color: theme.primaryColor.withOpacity(0.8),
+            color: theme.primaryColor.withValues(alpha: 0.8),
           ),
           _buildFormulaCard(
             context,
@@ -158,7 +157,7 @@ class FormulaReferenceScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'All scientific and economic formulas used to calculate metrics in CoturniSync.',
-                  style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.8)),
+                  style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
                 ),
               ],
             ),
@@ -185,7 +184,7 @@ class FormulaReferenceScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Divider(color: color.withOpacity(0.3), thickness: 1.5)),
+          Expanded(child: Divider(color: color.withValues(alpha: 0.3), thickness: 1.5)),
         ],
       ),
     );
@@ -210,7 +209,7 @@ class FormulaReferenceScreen extends StatelessWidget {
         border: Border(left: BorderSide(color: color, width: 4)),
         boxShadow: theme.brightness == Brightness.dark ? [] : [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -222,7 +221,7 @@ class FormulaReferenceScreen extends StatelessWidget {
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, size: 20, color: color),
@@ -243,7 +242,7 @@ class FormulaReferenceScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.07),
+                color: color.withValues(alpha: 0.07),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -284,7 +283,7 @@ class FormulaReferenceScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,7 +308,7 @@ class FormulaReferenceScreen extends StatelessWidget {
             'HDEP formula: Standard laying rate calculation (birds alive × period length).\n'
             'Shape Index: Standard poultry science morphometric index.\n'
             'IOFC: Standard animal production economic efficiency indicator.',
-            style: TextStyle(fontSize: 11, color: theme.textTheme.bodySmall?.color?.withOpacity(0.8), height: 1.6),
+            style: TextStyle(fontSize: 11, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8), height: 1.6),
           ),
         ],
       ),

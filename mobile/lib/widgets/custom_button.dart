@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme.dart';
 
 class CustomButton extends StatelessWidget {
   final String? title;
@@ -46,7 +45,7 @@ class CustomButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: theme.brightness == Brightness.dark ? [] : [
           BoxShadow(
-            color: theme.primaryColor.withOpacity(0.3),
+            color: theme.primaryColor.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -54,7 +53,7 @@ class CustomButton extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             theme.primaryColor, 
-            Color.alphaBlend(Colors.black.withOpacity(0.1), theme.primaryColor)
+            Color.alphaBlend(Colors.black.withValues(alpha: 0.1), theme.primaryColor)
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,

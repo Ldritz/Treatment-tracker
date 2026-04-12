@@ -23,17 +23,17 @@ class FloatingDock extends StatelessWidget {
       height: 70,
       decoration: BoxDecoration(
         color: isDark 
-          ? Colors.black.withOpacity(0.7) 
-          : Colors.white.withOpacity(0.8),
+          ? Colors.black.withValues(alpha: 0.7) 
+          : Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(35),
         border: Border.all(
           color: isDark 
-            ? Colors.white.withOpacity(0.1) 
-            : Colors.black.withOpacity(0.05),
+            ? Colors.white.withValues(alpha: 0.1) 
+            : Colors.black.withValues(alpha: 0.05),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -65,7 +65,7 @@ class FloatingDock extends StatelessWidget {
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: isSelected 
-                              ? theme.primaryColor.withOpacity(0.15) 
+                              ? theme.primaryColor.withValues(alpha: 0.15) 
                               : Colors.transparent,
                             shape: BoxShape.circle,
                           ),
@@ -74,7 +74,7 @@ class FloatingDock extends StatelessWidget {
                             size: 24,
                             color: isSelected 
                               ? theme.primaryColor 
-                              : theme.textTheme.bodySmall?.color?.withOpacity(0.5),
+                              : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                           ),
                         ),
                         if (isSelected)

@@ -8,7 +8,7 @@ import '../services/storage_service.dart';
 import '../services/sync_service.dart';
 import '../models/production_log.dart';
 import '../models/egg_log.dart';
-import '../theme.dart';
+
 import 'package:qr_flutter/qr_flutter.dart';
 
 class WebDashboardScreen extends StatefulWidget {
@@ -223,7 +223,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
                   color: theme.colorScheme.surface,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    border: Border(right: BorderSide(color: theme.dividerColor.withOpacity(0.1))),
+                    border: Border(right: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1))),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,7 +333,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        border: Border(bottom: BorderSide(color: theme.dividerColor.withOpacity(0.1))),
+        border: Border(bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1))),
       ),
       child: Row(
         children: [
@@ -355,13 +355,13 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
             child: Icon(icon, size: 20, color: color),
           ),
           const SizedBox(width: 12),
@@ -407,14 +407,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
     final fpCtrl = TextEditingController(text: storage.feedPrice > 0 ? storage.feedPrice.toString() : '');
     final epCtrl = TextEditingController(text: storage.eggPrice > 0 ? storage.eggPrice.toString() : '');
 
-    final Map<String, List<ProductionLog>> groupedLogs = {};
-    for (var log in storage.productionLogs) {
-      if (!groupedLogs.containsKey(log.treatment)) {
-        groupedLogs[log.treatment] = [];
-      }
-      groupedLogs[log.treatment]!.add(log);
-    }
-    final sortedTreatments = groupedLogs.keys.toList()..sort();
+    final summaries = storage.treatmentSummaries;
 
     return Column(
       children: [
@@ -489,28 +482,16 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
                   DataColumn(label: Text('Feed Cost (₱)', style: TextStyle(color: Colors.red))),
                   DataColumn(label: Text('IOFC (₱)', style: TextStyle(fontWeight: FontWeight.bold))),
                 ],
-                rows: sortedTreatments.map((t) {
-                  final logs = groupedLogs[t]!;
-                  double totalEggs = 0;
-                  double totalFeedGrams = 0;
-                  for (var log in logs) {
-                    totalEggs += log.eggs;
-                    totalFeedGrams += log.feedGiven;
-                  }
-                  final totalFeedKg = totalFeedGrams / 1000;
-                  final feedCost = totalFeedKg * storage.feedPrice;
-                  final grossRevenue = totalEggs * storage.eggPrice;
-                  final iofc = grossRevenue - feedCost;
-
+                rows: summaries.map((s) {
                   return DataRow(
                     cells: [
-                      DataCell(Text(t, style: const TextStyle(fontWeight: FontWeight.bold))),
-                      DataCell(Text(logs.length.toString())),
-                      DataCell(Text(totalEggs.toStringAsFixed(0))),
-                      DataCell(Text(totalFeedKg.toStringAsFixed(2))),
-                      DataCell(Text(grossRevenue.toStringAsFixed(2), style: const TextStyle(color: Color(0xFF10B981)))),
-                      DataCell(Text(feedCost.toStringAsFixed(2), style: const TextStyle(color: Colors.red))),
-                      DataCell(Text(iofc.toStringAsFixed(2), style: TextStyle(fontWeight: FontWeight.bold, color: iofc >= 0 ? const Color(0xFF047857) : Colors.red))),
+                      DataCell(Text(s.treatment, style: const TextStyle(fontWeight: FontWeight.bold))),
+                      DataCell(Text(s.logCount.toString())),
+                      DataCell(Text(s.totalEggs.toStringAsFixed(0))),
+                      DataCell(Text(s.totalFeedKg.toStringAsFixed(2))),
+                      DataCell(Text(s.grossRevenue.toStringAsFixed(2), style: const TextStyle(color: Color(0xFF10B981)))),
+                      DataCell(Text(s.feedCost.toStringAsFixed(2), style: const TextStyle(color: Colors.red))),
+                      DataCell(Text(s.iofc.toStringAsFixed(2), style: TextStyle(fontWeight: FontWeight.bold, color: s.iofc >= 0 ? const Color(0xFF047857) : Colors.red))),
                     ],
                   );
                 }).toList(),
@@ -552,7 +533,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
             if (_isAdmin) const DataColumn(label: Text('Actions')),
           ],
           rows: logs.map((log) {
-            final date = DateTime.parse(log.timestamp).toLocal().toString().split(' ')[0];
+            final date = log.timestamp.split('T').first;
             return DataRow(
               cells: [
                 DataCell(Text(date)),
@@ -613,7 +594,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
             if (_isAdmin) const DataColumn(label: Text('Actions')),
           ],
           rows: logs.map((log) {
-            final date = DateTime.parse(log.timestamp).toLocal().toString().split(' ')[0];
+            final date = log.timestamp.split('T').first;
             return DataRow(
               cells: [
                 DataCell(Text(date)),
@@ -660,14 +641,14 @@ class _StatTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.1),
+              color: theme.primaryColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: theme.primaryColor, size: 20),

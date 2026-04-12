@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import '../services/storage_service.dart';
 import '../services/sync_service.dart';
 import '../widgets/custom_button.dart';
-import '../theme.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -37,30 +36,34 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
       final storage = context.read<StorageService>();
       final isProd = _tabController.index == 0;
       
-      String csvString = '';
+      final buffer = StringBuffer();
       String filename = '';
 
       if (isProd) {
         filename = 'Quail_Production_Logs.csv';
-        csvString = 'ID,Date,Treatment,Block,Eggs,EggMass(g),QuailsAlive,Days,FeedGiven(g),FeedRefusal(g),VFI(g),FCR,HDEP(%)\n';
+        buffer.writeln('ID,Date,Treatment,Block,Eggs,EggMass(g),QuailsAlive,Days,FeedGiven(g),FeedRefusal(g),VFI(g),FCR,HDEP(%)');
         for (var log in storage.productionLogs) {
-          csvString += '${log.id},${log.timestamp},${log.treatment},${log.block},${log.eggs},${log.eggMass},${log.quails},${log.days},${log.feedGiven},${log.feedRefusal},${log.vfi},${log.fcr},${log.hdep}\n';
+          buffer.writeln('${log.id},${log.timestamp},${log.treatment},${log.block},${log.eggs},${log.eggMass},${log.quails},${log.days},${log.feedGiven},${log.feedRefusal},${log.vfi},${log.fcr},${log.hdep}');
         }
       } else {
         filename = 'Quail_Egg_Lab_Logs.csv';
-        csvString = 'ID,Date,Treatment,Block,Weight(g),L1(mm),L2(mm),L3(mm),LengthAvg(mm),W1(mm),W2(mm),W3(mm),WidthAvg(mm),AlbumenHeight(mm),ShellWeight(g),YolkWeight(g),HaughUnit,ShapeIndex(%),YolkPct(%)\n';
+        buffer.writeln('ID,Date,Treatment,Block,Weight(g),L1(mm),L2(mm),L3(mm),LengthAvg(mm),W1(mm),W2(mm),W3(mm),WidthAvg(mm),AlbumenHeight(mm),ShellWeight(g),YolkWeight(g),HaughUnit,ShapeIndex(%),YolkPct(%)');
         for (var log in storage.eggLogs) {
-          csvString += '${log.id},${log.timestamp},${log.treatment},${log.block},${log.weight},${log.l1},${log.l2},${log.l3},${log.length},${log.w1},${log.w2},${log.w3},${log.width},${log.albumenHeight},${log.shellWeight},${log.yolkWeight},${log.haughUnit},${log.shapeIndex},${log.yolkPct}\n';
+          buffer.writeln('${log.id},${log.timestamp},${log.treatment},${log.block},${log.weight},${log.l1},${log.l2},${log.l3},${log.length},${log.w1},${log.w2},${log.w3},${log.width},${log.albumenHeight},${log.shellWeight},${log.yolkWeight},${log.haughUnit},${log.shapeIndex},${log.yolkPct}');
         }
       }
+
+      final csvString = buffer.toString();
 
       final directory = await getTemporaryDirectory();
       final file = File('${directory.path}/$filename');
       await file.writeAsString(csvString);
 
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'Here is the exported CSV file.',
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'Here is the exported CSV file.',
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -104,9 +107,9 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
         boxShadow: theme.brightness == Brightness.dark ? [] : [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -142,7 +145,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
             ],
           ),
           const SizedBox(height: 12),
-          Divider(height: 1, color: theme.dividerColor.withOpacity(0.1)),
+          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
           const SizedBox(height: 12),
           if (isProd)
             Column(

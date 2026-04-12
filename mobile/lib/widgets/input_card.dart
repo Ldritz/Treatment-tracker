@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme.dart';
 
 class InputCard extends StatelessWidget {
   final String label;
@@ -8,6 +7,7 @@ class InputCard extends StatelessWidget {
   final String? unit;
   final TextInputType keyboardType;
   final TextInputAction action;
+  final String? errorText;
 
   const InputCard({
     super.key,
@@ -17,6 +17,7 @@ class InputCard extends StatelessWidget {
     this.unit,
     this.keyboardType = const TextInputType.numberWithOptions(decimal: true),
     this.action = TextInputAction.next,
+    this.errorText,
   });
 
   @override
@@ -28,7 +29,11 @@ class InputCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor, // Background tonal fill
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(
+          color: errorText != null 
+            ? Colors.red.withValues(alpha: 0.5) 
+            : theme.dividerColor.withValues(alpha: 0.1)
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +57,7 @@ class InputCard extends StatelessWidget {
                   ),
                   decoration: InputDecoration(
                     hintText: placeholder,
-                    hintStyle: TextStyle(color: theme.textTheme.bodySmall?.color?.withOpacity(0.5)),
+                    hintStyle: TextStyle(color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5)),
                     border: InputBorder.none,
                     isDense: true,
                     contentPadding: EdgeInsets.zero,
@@ -70,6 +75,13 @@ class InputCard extends StatelessWidget {
                 ),
             ],
           ),
+          if (errorText != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              errorText!,
+              style: const TextStyle(color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold),
+            ),
+          ],
         ],
       ),
     );

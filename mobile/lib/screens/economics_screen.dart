@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../services/storage_service.dart';
-import '../theme.dart';
 import '../models/production_log.dart';
 
 class EconomicsScreen extends StatefulWidget {
@@ -83,7 +82,7 @@ class _EconomicsScreenState extends State<EconomicsScreen> {
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
                 boxShadow: theme.brightness == Brightness.dark ? [] : [
                   const BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 4))
                 ],
@@ -163,7 +162,7 @@ class _EconomicsScreenState extends State<EconomicsScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12), 
-              borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.1))
+              borderSide: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1))
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
@@ -193,7 +192,7 @@ class _EconomicsScreenState extends State<EconomicsScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
         boxShadow: theme.brightness == Brightness.dark ? [] : [
           const BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 4))
         ],
@@ -206,7 +205,7 @@ class _EconomicsScreenState extends State<EconomicsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: theme.primaryColor.withOpacity(0.1),
+                  color: theme.primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -231,7 +230,7 @@ class _EconomicsScreenState extends State<EconomicsScreen> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Divider(color: theme.dividerColor.withOpacity(0.1)),
+            child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
           ),
           _buildMoneyRow(context, 'Gross Revenue', grossRevenue, isPositive: true),
           const SizedBox(height: 8),
@@ -240,10 +239,10 @@ class _EconomicsScreenState extends State<EconomicsScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: iofc >= 0 ? const Color(0xFF10B981).withOpacity(0.1) : theme.colorScheme.error.withOpacity(0.1),
+              color: iofc >= 0 ? const Color(0xFF10B981).withValues(alpha: 0.1) : theme.colorScheme.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: iofc >= 0 ? const Color(0xFF10B981).withOpacity(0.2) : theme.colorScheme.error.withOpacity(0.2)
+                color: iofc >= 0 ? const Color(0xFF10B981).withValues(alpha: 0.2) : theme.colorScheme.error.withValues(alpha: 0.2)
               ),
             ),
             child: Row(

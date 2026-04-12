@@ -3,7 +3,6 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import '../services/storage_service.dart';
 import '../services/sync_service.dart';
-import '../theme.dart';
 
 class SyncPairingDialog extends StatefulWidget {
   const SyncPairingDialog({super.key});
@@ -119,7 +118,7 @@ class _SyncPairingDialogState extends State<SyncPairingDialog> {
                       hintText: 'https://.../connect?u=...&k=...',
                       prefixIcon: const Icon(Icons.link),
                       labelStyle: TextStyle(color: theme.textTheme.bodySmall?.color),
-                      hintStyle: TextStyle(color: theme.textTheme.bodySmall?.color?.withOpacity(0.5)),
+                      hintStyle: TextStyle(color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5)),
                     ),
                   ),
                   const SizedBox(height: 16),

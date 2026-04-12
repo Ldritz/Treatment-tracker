@@ -10,12 +10,14 @@ import 'screens/egg_lab_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/economics_screen.dart';
 import 'screens/settings_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/sync_service.dart';
 import 'widgets/floating_dock.dart';
+import 'widgets/sync_status_indicator.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   final storageService = StorageService();
   await storageService.init();
 
@@ -70,36 +72,13 @@ class _MainTabContainerState extends State<MainTabContainer> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
         title: const Text('CoturniSync', style: TextStyle(fontWeight: FontWeight.bold)),
         elevation: 0,
-        actions: [
-          Consumer<SyncService>(
-            builder: (context, sync, child) {
-              IconData icon;
-              Color color;
-              if (sync.status == SyncState.online) {
-                icon = LucideIcons.cloudLightning;
-                color = const Color(0xFF10B981); // Emerald
-              } else if (sync.status == SyncState.syncing) {
-                icon = LucideIcons.refreshCw;
-                color = theme.primaryColor;
-              } else if (sync.status == SyncState.disabled) {
-                icon = LucideIcons.cloudOff;
-                color = theme.textTheme.bodySmall?.color ?? Colors.grey;
-              } else {
-                icon = LucideIcons.cloudOff;
-                color = theme.colorScheme.error;
-              }
-              return Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Icon(icon, color: color, size: 24),
-              );
-            },
-          ),
+        actions: const [
+          SyncStatusIndicator(),
         ],
       ),
       body: IndexedStack(

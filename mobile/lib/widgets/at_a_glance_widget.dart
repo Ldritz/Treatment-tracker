@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../services/storage_service.dart';
-import '../theme.dart';
+import 'trend_chart.dart';
 
 class AtAGlanceWidget extends StatelessWidget {
   final bool isDailyMode;
@@ -23,14 +23,12 @@ class AtAGlanceWidget extends StatelessWidget {
     // Calculate Week
     int week = 1;
     if (storage.productionLogs.isNotEmpty) {
-      DateTime oldest = now;
-      for (var log in storage.productionLogs) {
-        final logDate = DateTime.tryParse(log.timestamp);
-        if (logDate != null && logDate.isBefore(oldest)) {
-          oldest = logDate;
-        }
+      // Logs are sorted newest-first, so the oldest is the last one
+      final oldestLog = storage.productionLogs.last;
+      final oldestDate = DateTime.tryParse(oldestLog.timestamp);
+      if (oldestDate != null) {
+        week = (now.difference(oldestDate).inDays ~/ 7) + 1;
       }
-      week = (now.difference(oldest).inDays ~/ 7) + 1;
     }
 
     // Calculate Progress (per block)
@@ -40,6 +38,10 @@ class AtAGlanceWidget extends StatelessWidget {
 
     if (isDailyMode) {
       for (var log in storage.productionLogs) {
+        // Since logs are newest-first, if it doesn't start with today, 
+        // and we already found some today, we can stop or check if we should continue.
+        // Actually, we can just check if it starts with today. 
+        // If it doesn't and is before today, we break.
         if (log.timestamp.startsWith(todayIso)) {
           if (log.block == '1') {
             block1Treatments.add(log.treatment);
@@ -48,6 +50,8 @@ class AtAGlanceWidget extends StatelessWidget {
           } else if (log.block == '3') {
             block3Treatments.add(log.treatment);
           }
+        } else if (log.timestamp.split('T').first.compareTo(todayIso) < 0) {
+          break; // Stop once we hit yesterday
         }
       }
     } else {
@@ -60,6 +64,8 @@ class AtAGlanceWidget extends StatelessWidget {
           } else if (log.block == '3') {
             block3Treatments.add(log.treatment);
           }
+        } else if (log.timestamp.split('T').first.compareTo(todayIso) < 0) {
+          break;
         }
       }
     }
@@ -70,7 +76,6 @@ class AtAGlanceWidget extends StatelessWidget {
     final double overallProgress = completedCount / totalRequired.toDouble();
 
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
@@ -81,13 +86,13 @@ class AtAGlanceWidget extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             theme.primaryColor,
-            Color.alphaBlend(Colors.black.withOpacity(0.3), theme.primaryColor), 
+            Color.alphaBlend(Colors.black.withValues(alpha: 0.3), theme.primaryColor), 
           ],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: theme.primaryColor.withOpacity(0.3),
+            color: theme.primaryColor.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           )
@@ -106,7 +111,7 @@ class AtAGlanceWidget extends StatelessWidget {
                     'Hello, ${storage.researcherName}!',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.5,
                     ),
@@ -124,7 +129,7 @@ class AtAGlanceWidget extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -149,7 +154,7 @@ class AtAGlanceWidget extends StatelessWidget {
                     child: CircularProgressIndicator(
                       value: overallProgress,
                       strokeWidth: 6,
-                      backgroundColor: Colors.white.withOpacity(0.1),
+                      backgroundColor: Colors.white.withValues(alpha: 0.1),
                       valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   ),
@@ -181,7 +186,6 @@ class AtAGlanceWidget extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(child: _buildBlockProgress('Block 1', block1Treatments.length)),
@@ -189,6 +193,30 @@ class AtAGlanceWidget extends StatelessWidget {
               Expanded(child: _buildBlockProgress('Block 2', block2Treatments.length)),
               const SizedBox(width: 16),
               Expanded(child: _buildBlockProgress('Block 3', block3Treatments.length)),
+            ],
+          ),
+          const SizedBox(height: 28),
+          const Divider(color: Colors.white24, height: 1),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: TrendChart(
+                  label: 'HDEP Trend (%)',
+                  dataPoints: storage.productionLogs.take(7).map((e) => e.hdep).toList().reversed.toList(),
+                  color: const Color(0xFF10B981),
+                  maxY: 100,
+                ),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: TrendChart(
+                  label: 'VFI Trend (g)',
+                  dataPoints: storage.productionLogs.take(7).map((e) => e.vfi).toList().reversed.toList(),
+                  color: const Color(0xFFF59E0B),
+                  maxY: 45, // Quail VFI is usually around 25-35g
+                ),
+              ),
             ],
           ),
         ],
@@ -204,7 +232,7 @@ class AtAGlanceWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
-            Text('$count/9', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white.withOpacity(0.7))),
+            Text('$count/9', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white.withValues(alpha: 0.7))),
           ],
         ),
         const SizedBox(height: 8),
@@ -213,9 +241,9 @@ class AtAGlanceWidget extends StatelessWidget {
           child: LinearProgressIndicator(
             value: count / 9.0,
             minHeight: 4,
-            backgroundColor: Colors.white.withOpacity(0.1),
+            backgroundColor: Colors.white.withValues(alpha: 0.1),
             valueColor: AlwaysStoppedAnimation<Color>(
-              count == 9 ? const Color(0xFF10B981) : Colors.white.withOpacity(0.8),
+              count == 9 ? const Color(0xFF10B981) : Colors.white.withValues(alpha: 0.8),
             ),
           ),
         ),

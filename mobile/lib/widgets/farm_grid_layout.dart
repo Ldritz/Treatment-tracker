@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/storage_service.dart';
-import '../theme.dart';
 
 class FarmGridLayout extends StatelessWidget {
   final String? indicatorContext;
@@ -83,7 +82,7 @@ class FarmGridLayout extends StatelessWidget {
           decoration: BoxDecoration(
             color: theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
           ),
           child: Column(
             children: layout.asMap().entries.map((entry) {
@@ -114,20 +113,20 @@ class FarmGridLayout extends StatelessWidget {
                             border: Border.all(
                               color: isSelected 
                                   ? (isFilled ? const Color(0xFF10B981) : theme.colorScheme.secondary) 
-                                  : (isFilled ? const Color(0xFF10B981) : theme.dividerColor.withOpacity(0.2)),
+                                  : (isFilled ? const Color(0xFF10B981) : theme.dividerColor.withValues(alpha: 0.2)),
                               width: (isSelected || isFilled) ? 2.5 : 1,
                             ),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: theme.colorScheme.secondary.withOpacity(0.3),
+                                      color: theme.colorScheme.secondary.withValues(alpha: 0.3),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     )
                                   ]
                                 : (isFilled ? [
                                     BoxShadow(
-                                      color: const Color(0xFF10B981).withOpacity(0.1),
+                                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
                                       blurRadius: 4,
                                       offset: const Offset(0, 1),
                                     )

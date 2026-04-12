@@ -10,7 +10,6 @@ import '../widgets/custom_button.dart';
 import '../widgets/farm_grid_layout.dart';
 import '../widgets/at_a_glance_widget.dart';
 import '../widgets/success_overlay.dart';
-import '../theme.dart';
 
 class EggLabScreen extends StatefulWidget {
   const EggLabScreen({super.key});
@@ -33,6 +32,13 @@ class _EggLabScreenState extends State<EggLabScreen> {
 
   double _w = 0, _l = 0, _wd = 0, _h = 0, _sw = 0, _yw = 0;
 
+  String? _weightError;
+  String? _lError;
+  String? _wError;
+  String? _albumenError;
+  String? _shellError;
+  String? _yolkError;
+
   @override
   void initState() {
     super.initState();
@@ -51,18 +57,76 @@ class _EggLabScreenState extends State<EggLabScreen> {
   void _calcStats() {
     setState(() {
       _w = double.tryParse(_weightCtrl.text) ?? 0;
+      if (_weightCtrl.text.isNotEmpty) {
+        if (_w < 5 || _w > 25) {
+          _weightError = 'Range: 5-25g';
+        } else {
+          _weightError = null;
+        }
+      } else {
+        _weightError = null;
+      }
+
       double l1 = double.tryParse(_l1Ctrl.text) ?? 0;
       double l2 = double.tryParse(_l2Ctrl.text) ?? 0;
       double l3 = double.tryParse(_l3Ctrl.text) ?? 0;
       _l = (l1 + l2 + l3) / 3;
+      if (_l1Ctrl.text.isNotEmpty || _l2Ctrl.text.isNotEmpty || _l3Ctrl.text.isNotEmpty) {
+        if (_l < 15 || _l > 55) {
+          _lError = 'Out of range';
+        } else {
+          _lError = null;
+        }
+      } else {
+        _lError = null;
+      }
 
       double w1 = double.tryParse(_w1Ctrl.text) ?? 0;
       double w2 = double.tryParse(_w2Ctrl.text) ?? 0;
       double w3 = double.tryParse(_w3Ctrl.text) ?? 0;
       _wd = (w1 + w2 + w3) / 3;
+      if (_w1Ctrl.text.isNotEmpty || _w2Ctrl.text.isNotEmpty || _w3Ctrl.text.isNotEmpty) {
+        if (_wd < 15 || _wd > 45) {
+          _wError = 'Out of range';
+        } else {
+          _wError = null;
+        }
+      } else {
+        _wError = null;
+      }
+
       _h = double.tryParse(_albumenCtrl.text) ?? 0;
+      if (_albumenCtrl.text.isNotEmpty) {
+        if (_h < 0.5 || _h > 15) {
+          _albumenError = 'Range: 0.5-15mm';
+        } else {
+          _albumenError = null;
+        }
+      } else {
+        _albumenError = null;
+      }
+
       _sw = double.tryParse(_shellCtrl.text) ?? 0;
+      if (_shellCtrl.text.isNotEmpty) {
+        if (_sw < 0.5 || _sw > 5) {
+          _shellError = 'Range: 0.5-5g';
+        } else {
+          _shellError = null;
+        }
+      } else {
+        _shellError = null;
+      }
+
       _yw = double.tryParse(_yolkCtrl.text) ?? 0;
+      if (_yolkCtrl.text.isNotEmpty) {
+        if (_yw < 1 || _yw > 12) {
+          _yolkError = 'Range: 1-12g';
+        } else {
+          _yolkError = null;
+        }
+      } else {
+        _yolkError = null;
+      }
     });
   }
 
@@ -156,7 +220,6 @@ class _EggLabScreenState extends State<EggLabScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -170,9 +233,9 @@ class _EggLabScreenState extends State<EggLabScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withOpacity(0.5),
+                color: theme.colorScheme.surface.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
               ),
               child: const FarmGridLayout(indicatorContext: 'egg'),
             ),
@@ -184,7 +247,7 @@ class _EggLabScreenState extends State<EggLabScreen> {
               title: 'Physical Characteristics',
               icon: LucideIcons.egg,
               children: [
-                InputCard(label: 'Egg Weight', unit: 'g', controller: _weightCtrl, action: TextInputAction.next),
+                InputCard(label: 'Egg Weight', unit: 'g', controller: _weightCtrl, action: TextInputAction.next, errorText: _weightError),
                 const SizedBox(height: 16),
                 Text(
                   'Dimensions (mm)', 
@@ -197,21 +260,21 @@ class _EggLabScreenState extends State<EggLabScreen> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Expanded(child: InputCard(label: 'L1', controller: _l1Ctrl, action: TextInputAction.next)),
+                    Expanded(child: InputCard(label: 'L1', controller: _l1Ctrl, action: TextInputAction.next, errorText: _lError)),
                     const SizedBox(width: 8),
-                    Expanded(child: InputCard(label: 'L2', controller: _l2Ctrl, action: TextInputAction.next)),
+                    Expanded(child: InputCard(label: 'L2', controller: _l2Ctrl, action: TextInputAction.next, errorText: _lError)),
                     const SizedBox(width: 8),
-                    Expanded(child: InputCard(label: 'L3', controller: _l3Ctrl, action: TextInputAction.next)),
+                    Expanded(child: InputCard(label: 'L3', controller: _l3Ctrl, action: TextInputAction.next, errorText: _lError)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Expanded(child: InputCard(label: 'W1', controller: _w1Ctrl, action: TextInputAction.next)),
+                    Expanded(child: InputCard(label: 'W1', controller: _w1Ctrl, action: TextInputAction.next, errorText: _wError)),
                     const SizedBox(width: 8),
-                    Expanded(child: InputCard(label: 'W2', controller: _w2Ctrl, action: TextInputAction.next)),
+                    Expanded(child: InputCard(label: 'W2', controller: _w2Ctrl, action: TextInputAction.next, errorText: _wError)),
                     const SizedBox(width: 8),
-                    Expanded(child: InputCard(label: 'W3', controller: _w3Ctrl, action: TextInputAction.next)),
+                    Expanded(child: InputCard(label: 'W3', controller: _w3Ctrl, action: TextInputAction.next, errorText: _wError)),
                   ],
                 ),
               ],
@@ -225,13 +288,13 @@ class _EggLabScreenState extends State<EggLabScreen> {
               title: 'Internal Quality Traits',
               icon: LucideIcons.flaskConical,
               children: [
-                InputCard(label: 'Albumen Height', unit: 'mm', controller: _albumenCtrl, action: TextInputAction.next),
+                InputCard(label: 'Albumen Height', unit: 'mm', controller: _albumenCtrl, action: TextInputAction.next, errorText: _albumenError),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: InputCard(label: 'Shell Weight', unit: 'g', controller: _shellCtrl, action: TextInputAction.next)),
+                    Expanded(child: InputCard(label: 'Shell Weight', unit: 'g', controller: _shellCtrl, action: TextInputAction.next, errorText: _shellError)),
                     const SizedBox(width: 12),
-                    Expanded(child: InputCard(label: 'Yolk Weight', unit: 'g', controller: _yolkCtrl, action: TextInputAction.done)),
+                    Expanded(child: InputCard(label: 'Yolk Weight', unit: 'g', controller: _yolkCtrl, action: TextInputAction.done, errorText: _yolkError)),
                   ],
                 ),
               ],
@@ -275,10 +338,10 @@ class _EggLabScreenState extends State<EggLabScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
         boxShadow: theme.brightness == Brightness.dark ? [] : [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
