@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { Loader2, TrendingUp, Egg, Activity, Smartphone, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -8,13 +8,15 @@ export default function Dashboard() {
   const [showPairing, setShowPairing] = useState(false);
   const [productionLogs, setProductionLogs] = useState([]);
   const [eggLogs, setEggLogs] = useState([]);
-  const [stats, setStats] = useState({ totalEggs: 0, avgHdep: 0, avgHaugh: 0 });
 
   // Get Supabase config for pairing
-  const sUrl = 'https://lpyxwxfmshuwwogalkfd.supabase.co';
-  const sKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxweXh3eGZtc2h1d3dvZ2Fsa2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MDEzNDAsImV4cCI6MjA5MTM3NzM0MH0.pWDpmmWQDugls7-SDNI5gWUk-ImkdE6ksYxxrS7dwfU';
-  const baseUrl = window.location.origin;
-  const pairingLink = `${baseUrl}/connect?u=${sUrl}&k=${sKey}`;
+  const sUrl = import.meta.env.VITE_SUPABASE_URL;
+  const sKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  const pairingLink = useMemo(() => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/connect?u=${sUrl}&k=${sKey}`;
+  }, [sUrl, sKey]);
 
   useEffect(() => {
     fetchData();
@@ -24,50 +26,22 @@ export default function Dashboard() {
     try {
       setLoading(true);
       
-      const { data: prodData, error: prodErr } = await supabase
-        .from('production_logs')
-        .select('*')
-        .order('timestamp', { ascending: false });
+      const [prodRes, eggRes] = await Promise.all([
+        supabase
+          .from('production_logs')
+          .select('*')
+          .order('timestamp', { ascending: false }),
+        supabase
+          .from('egg_logs')
+          .select('*')
+          .order('timestamp', { ascending: false })
+      ]);
         
-      if (prodErr) throw prodErr;
-      
-      const { data: eggData, error: eggErr } = await supabase
-        .from('egg_logs')
-        .select('*')
-        .order('timestamp', { ascending: false });
-        
-      if (eggErr) throw eggErr;
+      if (prodRes.error) throw prodRes.error;
+      if (eggRes.error) throw eggRes.error;
 
-      setProductionLogs(prodData || []);
-      setEggLogs(eggData || []);
-      
-      // Calculate basic stats
-      let total = 0;
-      let hdepSum = 0;
-      let prodCount = 0;
-      
-      (prodData || []).forEach(log => {
-        total += log.eggs || 0;
-        if (log.hdep) {
-          hdepSum += log.hdep;
-          prodCount++;
-        }
-      });
-      
-      let haughSum = 0;
-      let eggCount = 0;
-      (eggData || []).forEach(log => {
-        if (log.haughunit) {
-          haughSum += log.haughunit;
-          eggCount++;
-        }
-      });
-
-      setStats({
-        totalEggs: total,
-        avgHdep: prodCount > 0 ? (hdepSum / prodCount).toFixed(1) : 0,
-        avgHaugh: eggCount > 0 ? (haughSum / eggCount).toFixed(1) : 0
-      });
+      setProductionLogs(prodRes.data || []);
+      setEggLogs(eggRes.data || []);
       
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -75,6 +49,39 @@ export default function Dashboard() {
       setLoading(false);
     }
   }
+
+  const stats = useMemo(() => {
+    let total = 0;
+    let hdepSum = 0;
+    let prodCount = 0;
+
+    const pLen = productionLogs.length;
+    for (let i = 0; i < pLen; i++) {
+      const log = productionLogs[i];
+      total += log.eggs || 0;
+      if (log.hdep) {
+        hdepSum += log.hdep;
+        prodCount++;
+      }
+    }
+
+    let haughSum = 0;
+    let eggCount = 0;
+    const eLen = eggLogs.length;
+    for (let i = 0; i < eLen; i++) {
+      const log = eggLogs[i];
+      if (log.haughunit) {
+        haughSum += log.haughunit;
+        eggCount++;
+      }
+    }
+
+    return {
+      totalEggs: total,
+      avgHdep: prodCount > 0 ? (hdepSum / prodCount).toFixed(1) : 0,
+      avgHaugh: eggCount > 0 ? (haughSum / eggCount).toFixed(1) : 0
+    };
+  }, [productionLogs, eggLogs]);
 
   if (loading) {
     return (

@@ -10,6 +10,8 @@ import '../models/production_log.dart';
 import '../models/egg_log.dart';
 import '../theme.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 class WebDashboardScreen extends StatefulWidget {
   const WebDashboardScreen({super.key});
@@ -35,8 +37,8 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
     final theme = Theme.of(context);
     // Detect the current base URL if on web, otherwise fallback
     final baseUrl = kIsWeb ? Uri.base.origin : 'https://quail-logger.vercel.app';
-    const sUrl = 'https://lpyxwxfmshuwwogalkfd.supabase.co';
-    const sKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxweXh3eGZtc2h1d3dvZ2Fsa2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MDEzNDAsImV4cCI6MjA5MTM3NzM0MH0.pWDpmmWQDugls7-SDNI5gWUk-ImkdE6ksYxxrS7dwfU';
+    final sUrl = dotenv.env['SUPABASE_URL'] ?? '';
+    final sKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
     
     final pairingLink = '$baseUrl/connect?u=$sUrl&k=$sKey';
 
