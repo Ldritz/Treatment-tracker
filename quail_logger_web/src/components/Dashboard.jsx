@@ -11,8 +11,8 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ totalEggs: 0, avgHdep: 0, avgHaugh: 0 });
 
   // Get Supabase config for pairing
-  const sUrl = 'https://lpyxwxfmshuwwogalkfd.supabase.co';
-  const sKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxweXh3eGZtc2h1d3dvZ2Fsa2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MDEzNDAsImV4cCI6MjA5MTM3NzM0MH0.pWDpmmWQDugls7-SDNI5gWUk-ImkdE6ksYxxrS7dwfU';
+  const sUrl = import.meta.env.VITE_SUPABASE_URL;
+  const sKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   const baseUrl = window.location.origin;
   const pairingLink = `${baseUrl}/connect?u=${sUrl}&k=${sKey}`;
 

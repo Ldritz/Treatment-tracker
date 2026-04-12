@@ -170,6 +170,24 @@ class StorageService extends ChangeNotifier {
     }
   }
 
+  Future<void> hardDeleteProductionLog(String id) async {
+    final originalLength = _productionLogs.length;
+    _productionLogs.removeWhere((log) => log.id == id);
+    if (_productionLogs.length != originalLength) {
+      notifyListeners();
+      await _saveData(_prodLogsKey, _productionLogs.map((e) => e.toJson()).toList());
+    }
+  }
+
+  Future<void> hardDeleteEggLog(String id) async {
+    final originalLength = _eggLogs.length;
+    _eggLogs.removeWhere((log) => log.id == id);
+    if (_eggLogs.length != originalLength) {
+      notifyListeners();
+      await _saveData(_eggLogsKey, _eggLogs.map((e) => e.toJson()).toList());
+    }
+  }
+
   Future<void> updateProductionLog(ProductionLog log) async {
     final index = _productionLogs.indexWhere((l) => l.id == log.id);
     if (index != -1) {
@@ -226,16 +244,24 @@ class StorageService extends ChangeNotifier {
 
   Future<void> mergeProductionLogs(List<ProductionLog> cloudLogs) async {
     bool changed = false;
+    final cloudIds = cloudLogs.map((l) => l.id).toSet();
+
+    // 1. Identify logs that were deleted on the server
+    // (If it was synced but is now missing from server logs)
+    final initialCount = _productionLogs.length;
+    _productionLogs.removeWhere((local) => local.isSynced && !cloudIds.contains(local.id));
+    if (_productionLogs.length != initialCount) {
+      changed = true;
+    }
+
+    // 2. Standard merge/upsert for cloud logs
     for (var cloud in cloudLogs) {
       final localIndex = _productionLogs.indexWhere((l) => l.id == cloud.id);
       
       if (localIndex == -1) {
-        // Log doesn't exist locally. Add it, but only if it's not deleted.
-        // Actually, we should keep it even if deleted so we don't try to re-sync it up later.
         _productionLogs.add(cloud.copyWith(isSynced: true));
         changed = true;
       } else {
-        // Log exists locally. Check which is newer.
         final local = _productionLogs[localIndex];
         final cloudTime = DateTime.parse(cloud.lastModified);
         final localTime = DateTime.parse(local.lastModified);
@@ -255,6 +281,16 @@ class StorageService extends ChangeNotifier {
 
   Future<void> mergeEggLogs(List<EggLog> cloudLogs) async {
     bool changed = false;
+    final cloudIds = cloudLogs.map((l) => l.id).toSet();
+
+    // 1. Identify logs that were deleted on the server
+    final initialCount = _eggLogs.length;
+    _eggLogs.removeWhere((local) => local.isSynced && !cloudIds.contains(local.id));
+    if (_eggLogs.length != initialCount) {
+      changed = true;
+    }
+
+    // 2. Standard merge/upsert
     for (var cloud in cloudLogs) {
       final localIndex = _eggLogs.indexWhere((l) => l.id == cloud.id);
       

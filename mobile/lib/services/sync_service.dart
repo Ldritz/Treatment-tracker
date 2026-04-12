@@ -16,6 +16,8 @@ class SyncService with ChangeNotifier {
   SyncState get status => _status;
   
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+  Timer? _periodicSyncTimer;
+  RealtimeChannel? _realtimeChannel;
 
   SyncService(this.storageService) {
     _init();
@@ -42,6 +44,43 @@ class SyncService with ChangeNotifier {
     });
 
     _syncData();
+
+    // Setup periodic sync every 5 minutes
+    _periodicSyncTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      if (_status != SyncState.disabled) {
+        _syncData();
+      }
+    });
+  }
+
+  void _setupRealtime() {
+    if (_supabase == null || _realtimeChannel != null) return;
+
+    _realtimeChannel = _supabase!.channel('public:logs_deletions');
+
+    _realtimeChannel!.onPostgresChanges(
+      event: PostgresChangeEvent.delete,
+      schema: 'public',
+      table: 'production_logs',
+      callback: (payload) {
+        final id = payload.oldRecord['id'] as String?;
+        if (id != null) {
+          debugPrint('Realtime: Delete production_log $id');
+          storageService.hardDeleteProductionLog(id);
+        }
+      },
+    ).onPostgresChanges(
+      event: PostgresChangeEvent.delete,
+      schema: 'public',
+      table: 'egg_logs',
+      callback: (payload) {
+        final id = payload.oldRecord['id'] as String?;
+        if (id != null) {
+          debugPrint('Realtime: Delete egg_log $id');
+          storageService.hardDeleteEggLog(id);
+        }
+      },
+    ).subscribe();
   }
 
   Future<bool> _ensureInitialized() async {
@@ -92,6 +131,8 @@ class SyncService with ChangeNotifier {
 
     final initialized = await _ensureInitialized();
     if (!initialized) return;
+
+    _setupRealtime();
 
     // On web, connectivity_plus is unreliable — skip the check and attempt directly.
     if (!kIsWeb) {
@@ -157,6 +198,8 @@ class SyncService with ChangeNotifier {
 
   /// Manually force a re-initialization (e.g. after changing config)
   Future<void> reinitialize() async {
+    _realtimeChannel?.unsubscribe();
+    _realtimeChannel = null;
     _supabase = null; // Clear local reference
     _setStatus(SyncState.offline);
     await _syncData();
@@ -170,6 +213,8 @@ class SyncService with ChangeNotifier {
   @override
   void dispose() {
     _connectivitySubscription.cancel();
+    _periodicSyncTimer?.cancel();
+    _realtimeChannel?.unsubscribe();
     super.dispose();
   }
 }

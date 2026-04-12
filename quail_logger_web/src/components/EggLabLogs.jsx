@@ -10,6 +10,23 @@ const EggLabLogs = () => {
 
   useEffect(() => {
     fetchLogs();
+
+    const channel = supabase
+      .channel('egg_logs_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'egg_logs' }, payload => {
+        if (payload.eventType === 'INSERT') {
+          setLogs(prev => [payload.new, ...prev].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+        } else if (payload.eventType === 'UPDATE') {
+          setLogs(prev => prev.map(log => log.id === payload.new.id ? payload.new : log));
+        } else if (payload.eventType === 'DELETE') {
+          setLogs(prev => prev.filter(log => log.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchLogs = async () => {

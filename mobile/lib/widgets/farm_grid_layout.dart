@@ -110,10 +110,12 @@ class FarmGridLayout extends StatelessWidget {
                           height: 60,
                           decoration: BoxDecoration(
                             color: isSelected ? theme.colorScheme.secondary : theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isSelected ? theme.colorScheme.secondary : theme.dividerColor.withOpacity(0.2),
-                              width: 2,
+                              color: isSelected 
+                                  ? (isFilled ? const Color(0xFF10B981) : theme.colorScheme.secondary) 
+                                  : (isFilled ? const Color(0xFF10B981) : theme.dividerColor.withOpacity(0.2)),
+                              width: (isSelected || isFilled) ? 2.5 : 1,
                             ),
                             boxShadow: isSelected
                                 ? [
@@ -123,31 +125,22 @@ class FarmGridLayout extends StatelessWidget {
                                       offset: const Offset(0, 2),
                                     )
                                   ]
-                                : [],
+                                : (isFilled ? [
+                                    BoxShadow(
+                                      color: const Color(0xFF10B981).withOpacity(0.1),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1),
+                                    )
+                                  ] : []),
                           ),
                           alignment: Alignment.center,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                treatment,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                                  color: isSelected ? Colors.white : theme.textTheme.displaySmall?.color,
-                                ),
-                              ),
-                              if (indicatorContext != null) ...[
-                                const SizedBox(width: 4),
-                                Icon(
-                                  isFilled ? Icons.check_circle : Icons.radio_button_unchecked,
-                                  size: 16,
-                                  color: isFilled 
-                                      ? (isSelected ? Colors.white : const Color(0xFF10B981)) 
-                                      : (isSelected ? Colors.white70 : theme.textTheme.bodySmall?.color?.withOpacity(0.5)),
-                                ),
-                              ],
-                            ],
+                          child: Text(
+                            treatment,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                              color: isSelected ? Colors.white : theme.textTheme.displaySmall?.color,
+                            ),
                           ),
                         ),
                       ),

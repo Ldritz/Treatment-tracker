@@ -166,15 +166,6 @@ class _EggLabScreenState extends State<EggLabScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const AtAGlanceWidget(isDailyMode: false),
-            const SizedBox(height: 16),
-            Text(
-              'Farm Status', 
-              style: TextStyle(
-                fontSize: 16, 
-                fontWeight: FontWeight.bold, 
-                color: theme.textTheme.displaySmall?.color
-              )
-            ),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(16),

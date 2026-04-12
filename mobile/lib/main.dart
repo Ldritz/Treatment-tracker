@@ -12,6 +12,8 @@ import 'screens/economics_screen.dart';
 import 'screens/settings_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/sync_service.dart';
+import 'widgets/floating_dock.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final storageService = StorageService();
@@ -70,6 +72,7 @@ class _MainTabContainerState extends State<MainTabContainer> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      extendBody: true,
       appBar: AppBar(
         title: const Text('CoturniSync', style: TextStyle(fontWeight: FontWeight.bold)),
         elevation: 0,
@@ -103,71 +106,16 @@ class _MainTabContainerState extends State<MainTabContainer> {
         index: _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.only(bottom: 24, left: 20, right: 20),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.transparent, // Uses container color
-            elevation: 0,
-            selectedItemColor: theme.primaryColor,
-            unselectedItemColor: theme.textTheme.bodySmall?.color?.withOpacity(0.5),
-            selectedFontSize: 12,
-            unselectedFontSize: 12,
-            showUnselectedLabels: true,
-            onTap: (index) => setState(() => _currentIndex = index),
-            items: const [
-              BottomNavigationBarItem(
-                icon: Padding(
-                  padding: EdgeInsets.only(bottom: 4),
-                  child: Icon(LucideIcons.clipboardList, size: 22),
-                ),
-                label: 'Daily Logs',
-              ),
-              BottomNavigationBarItem(
-                icon: Padding(
-                  padding: EdgeInsets.only(bottom: 4),
-                  child: Icon(LucideIcons.egg, size: 22),
-                ),
-                label: 'Egg Lab',
-              ),
-              BottomNavigationBarItem(
-                icon: Padding(
-                  padding: EdgeInsets.only(bottom: 4),
-                  child: Icon(LucideIcons.history, size: 22),
-                ),
-                label: 'History',
-              ),
-              BottomNavigationBarItem(
-                icon: Padding(
-                  padding: EdgeInsets.only(bottom: 4),
-                  child: Icon(LucideIcons.coins, size: 22),
-                ),
-                label: 'Economics',
-              ),
-              BottomNavigationBarItem(
-                icon: Padding(
-                  padding: EdgeInsets.only(bottom: 4),
-                  child: Icon(LucideIcons.settings, size: 22),
-                ),
-                label: 'Settings',
-              ),
-            ],
-          ),
-        ),
+      bottomNavigationBar: FloatingDock(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        items: [
+          FloatingDockItem(icon: LucideIcons.clipboardList, label: 'Daily'),
+          FloatingDockItem(icon: LucideIcons.egg, label: 'Egg Lab'),
+          FloatingDockItem(icon: LucideIcons.history, label: 'History'),
+          FloatingDockItem(icon: LucideIcons.coins, label: 'Economics'),
+          FloatingDockItem(icon: LucideIcons.settings, label: 'Settings'),
+        ],
       ),
     );
   }
