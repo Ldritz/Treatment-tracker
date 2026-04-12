@@ -206,11 +206,11 @@ export default function Dashboard() {
 
       {showPairing && (
         <div className="modal-overlay" onClick={() => setShowPairing(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <button className="modal-close" aria-label="Close modal" onClick={() => setShowPairing(false)}>
               <X size={24} />
             </button>
-            <h2 style={{ marginBottom: '1rem' }}>Connect Mobile App</h2>
+            <h2 id="modal-title" style={{ marginBottom: '1rem' }}>Connect Mobile App</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
               Scan this QR code with the Quail Logger mobile app to link your devices and enable cloud sync.
             </p>
