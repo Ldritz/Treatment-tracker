@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { TREATMENT_MAP, FACTORS } from '../constants/researchDesign';
 import { Beaker, Sun, Clock, Zap, Target, TrendingUp } from 'lucide-react';
@@ -30,19 +30,23 @@ const ResearchAnalysis = () => {
     }
   };
 
-  const getAggregatedData = () => {
+  const data = useMemo(() => {
     const matrix = {};
     
     // Initialize matrix
-    FACTORS.duration.forEach(dur => {
+    for (let i = 0; i < FACTORS.duration.length; i++) {
+      const dur = FACTORS.duration[i];
       matrix[dur] = {};
-      FACTORS.intensity.forEach(int => {
+      for (let j = 0; j < FACTORS.intensity.length; j++) {
+        const int = FACTORS.intensity[j];
         matrix[dur][int] = { hdep: [], fcr: [], haugh: [], count: 0 };
-      });
-    });
+      }
+    }
 
     // Process production logs for HDEP and FCR
-    prodLogs.forEach(log => {
+    const pLen = prodLogs.length;
+    for (let i = 0; i < pLen; i++) {
+      const log = prodLogs[i];
       const mapping = TREATMENT_MAP[log.treatment];
       if (mapping) {
         const cell = matrix[mapping.duration][mapping.intensity];
@@ -50,53 +54,59 @@ const ResearchAnalysis = () => {
         if (log.fcr) cell.fcr.push(log.fcr);
         cell.count += 1;
       }
-    });
+    }
 
     // Process egg logs for Haugh Unit
-    eggLogs.forEach(log => {
+    const eLen = eggLogs.length;
+    for (let i = 0; i < eLen; i++) {
+      const log = eggLogs[i];
       const mapping = TREATMENT_MAP[log.treatment];
       if (mapping) {
         const cell = matrix[mapping.duration][mapping.intensity];
         if (log.haughunit) cell.haugh.push(log.haughunit);
       }
-    });
+    }
 
     // Calculate averages
     const averages = {};
-    Object.keys(matrix).forEach(dur => {
+    const durations = Object.keys(matrix);
+    for (let i = 0; i < durations.length; i++) {
+      const dur = durations[i];
       averages[dur] = {};
-      Object.keys(matrix[dur]).forEach(int => {
+      const intensities = Object.keys(matrix[dur]);
+      for (let j = 0; j < intensities.length; j++) {
+        const int = intensities[j];
         const cell = matrix[dur][int];
         averages[dur][int] = {
           hdep: cell.hdep.length ? cell.hdep.reduce((a, b) => a + b, 0) / cell.hdep.length : 0,
           fcr: cell.fcr.length ? cell.fcr.reduce((a, b) => a + b, 0) / cell.fcr.length : 0,
           haugh: cell.haugh.length ? cell.haugh.reduce((a, b) => a + b, 0) / cell.haugh.length : 0
         };
-      });
-    });
+      }
+    }
 
     return averages;
-  };
+  }, [prodLogs, eggLogs]);
 
-  const data = getAggregatedData();
-
-  const getBestCombination = () => {
-    let best = { dur: '', int: '', val: activeMetric === 'fcr' ? Infinity : -Infinity };
-    Object.keys(data).forEach(dur => {
-      Object.keys(data[dur]).forEach(int => {
+  const best = useMemo(() => {
+    let currentBest = { dur: '', int: '', val: activeMetric === 'fcr' ? Infinity : -Infinity };
+    const durations = Object.keys(data);
+    for (let i = 0; i < durations.length; i++) {
+      const dur = durations[i];
+      const intensities = Object.keys(data[dur]);
+      for (let j = 0; j < intensities.length; j++) {
+        const int = intensities[j];
         const val = data[dur][int][activeMetric];
-        if (val === 0) return;
+        if (val === 0) continue;
         if (activeMetric === 'fcr') {
-           if (val < best.val) best = { dur, int, val };
+           if (val < currentBest.val) currentBest = { dur, int, val };
         } else {
-           if (val > best.val) best = { dur, int, val };
+           if (val > currentBest.val) currentBest = { dur, int, val };
         }
-      });
-    });
-    return best;
-  };
-
-  const best = getBestCombination();
+      }
+    }
+    return currentBest;
+  }, [data, activeMetric]);
 
   if (loading) return <div className="loading-state">Analyzing study interactions...</div>;
 
