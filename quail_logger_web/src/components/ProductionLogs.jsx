@@ -109,6 +109,7 @@ const ProductionLogs = () => {
                     <td style={{ textAlign: 'right' }}>
                       <button 
                          className="btn-icon-danger" 
+                         aria-label="Delete log"
                          onClick={() => handleDelete(log.id)}
                          disabled={deletingId === log.id}
                       >

@@ -207,7 +207,7 @@ export default function Dashboard() {
       {showPairing && (
         <div className="modal-overlay" onClick={() => setShowPairing(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowPairing(false)}>
+            <button className="modal-close" aria-label="Close modal" onClick={() => setShowPairing(false)}>
               <X size={24} />
             </button>
             <h2 style={{ marginBottom: '1rem' }}>Connect Mobile App</h2>
