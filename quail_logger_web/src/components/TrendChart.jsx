@@ -8,8 +8,7 @@ import {
   Tooltip, 
   ResponsiveContainer, 
   Area, 
-  AreaChart, 
-  defs 
+  AreaChart 
 } from 'recharts';
 
 export default function TrendChart({ title, data, color, dataKey, maxY, unit = '' }) {
