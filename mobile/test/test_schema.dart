@@ -1,8 +1,10 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
-  final client = SupabaseClient('https://lpyxwxfmshuwwogalkfd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxweXh3eGZtc2h1d3dvZ2Fsa2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MDEzNDAsImV4cCI6MjA5MTM3NzM0MH0.pWDpmmWQDugls7-SDNI5gWUk-ImkdE6ksYxxrS7dwfU');
+  await dotenv.load(fileName: ".env");
+  final client = SupabaseClient(dotenv.env['SUPABASE_URL'] ?? '', dotenv.env['SUPABASE_ANON_KEY'] ?? '');
   
   try {
     final res = await client.from('production_logs').select().limit(1);
