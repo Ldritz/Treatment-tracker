@@ -81,32 +81,6 @@ const Export = () => {
           )}
         </button>
       </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .export-card {
-          max-width: 500px;
-          margin: 40px auto;
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          padding: 40px;
-          text-align: center;
-        }
-        .export-icon-container {
-          background: rgba(16, 185, 129, 0.1);
-          width: 100px;
-          height: 100px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 24px;
-        }
-        .text-emerald { color: #10b981; }
-        .animate-spin { animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}} />
     </div>
   );
 };
