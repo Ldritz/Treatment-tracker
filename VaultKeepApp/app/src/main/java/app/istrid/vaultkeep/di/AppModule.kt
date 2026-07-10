@@ -93,6 +93,19 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
     }
 }
 
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE vault_entries DROP COLUMN linkedPackageName")
+        db.execSQL("ALTER TABLE vault_entries DROP COLUMN linkedUrl")
+    }
+}
+
+val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE vault_entries ADD COLUMN userCustomFields TEXT NOT NULL DEFAULT '[]'")
+    }
+}
+
 val appModule = module {
     single { DatabaseKeyManager(androidContext()) }
 
@@ -114,7 +127,7 @@ val appModule = module {
             "vaultkeep_secure.db"
         )
         .openHelperFactory(factory)
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_8_9, MIGRATION_9_10)
         .build()
     }
 

@@ -10,6 +10,7 @@ data class CustomFieldData(
     val isMasked: Boolean = false
 )
 
+@Serializable
 @Entity(tableName = "personal_profiles")
 data class PersonalProfileEntity(
     @PrimaryKey val id: Int = 1,

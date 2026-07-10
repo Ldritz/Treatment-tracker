@@ -19,7 +19,8 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 class BackupViewModel(
-    private val backupManager: BackupManager
+    private val backupManager: BackupManager,
+    private val settingsRepository: app.istrid.vaultkeep.data.repository.SettingsRepository
 ) : ViewModel() {
     var backupState by mutableStateOf<String?>(null)
 
@@ -27,7 +28,10 @@ class BackupViewModel(
         viewModelScope.launch {
             backupState = "Exporting..."
             backupManager.exportBackup(uri, password).fold(
-                onSuccess = { backupState = "Export successful!" },
+                onSuccess = { 
+                    backupState = "Export successful!" 
+                    settingsRepository.resetUnsavedChanges()
+                },
                 onFailure = { backupState = "Export failed: ${it.message}" }
             )
         }
@@ -35,10 +39,20 @@ class BackupViewModel(
 
     fun importDatabase(uri: Uri, password: String) {
         viewModelScope.launch {
-            backupState = "Importing..."
-            backupManager.importBackup(uri, password).fold(
-                onSuccess = { added -> backupState = "Import successful! Added $added new entries." },
-                onFailure = { backupState = "Import failed: ${it.message}" }
+            backupState = "Importing…"
+            backupManager.importBackupCompat(uri, password).fold(
+                onSuccess = { added -> 
+                    backupState = "Import successful! Added $added new entries." 
+                    settingsRepository.resetUnsavedChanges()
+                },
+                onFailure = { e ->
+                    backupState = if (e is IllegalArgumentException) {
+                        // Distinct auth-failure path: wrong password or tampered file
+                        "❌ Incorrect password or the backup file has been tampered with."
+                    } else {
+                        "Import failed: ${e.message}"
+                    }
+                }
             )
         }
     }
@@ -146,7 +160,7 @@ fun BackupScreen(
             },
             confirmButton = {
                 TextButton(
-                    onClick = { createDocumentLauncher.launch("vaultkeep_backup.enc") },
+                    onClick = { createDocumentLauncher.launch("vaultkeep_backup.vkback") },
                     enabled = password.length >= 4
                 ) {
                     Text("Choose Location")

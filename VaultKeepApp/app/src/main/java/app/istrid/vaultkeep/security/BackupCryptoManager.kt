@@ -11,7 +11,7 @@ class BackupCryptoManager {
     companion object {
         private const val ALGORITHM = "AES/GCM/NoPadding"
         private const val KEY_ALGORITHM = "PBKDF2WithHmacSHA256"
-        private const val ITERATION_COUNT = 65536
+        private const val ITERATION_COUNT = 100_000
         private const val KEY_LENGTH = 256
         private const val SALT_LENGTH = 16
         private const val IV_LENGTH = 12

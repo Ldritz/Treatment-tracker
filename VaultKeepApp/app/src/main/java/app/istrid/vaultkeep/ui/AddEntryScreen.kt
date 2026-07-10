@@ -35,6 +35,9 @@ import app.istrid.vaultkeep.data.model.VaultEntry
 import coil.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
 import kotlinx.serialization.encodeToString
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.ImageBitmap
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -203,6 +206,11 @@ fun AddEntryScreen(
     var originalEntry by remember { mutableStateOf<VaultEntry?>(null) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 
+    var userCustomFields by remember { mutableStateOf(listOf<app.istrid.vaultkeep.data.model.CustomField>()) }
+    var showAddCustomFieldDialog by remember { mutableStateOf(false) }
+    var newCustomFieldLabel by remember { mutableStateOf("") }
+    var newCustomFieldMasked by remember { mutableStateOf(false) }
+
     val reusedPasswords by viewModel.reusedPasswords.collectAsState(initial = emptySet())
 
     LaunchedEffect(entryId) {
@@ -215,6 +223,7 @@ fun AddEntryScreen(
                 username = entry.username
                 secretValue = entry.secretValue
                 iconName = if (entry.iconName.isBlank()) "AccountCircle" else entry.iconName
+                userCustomFields = entry.userCustomFields
                 selectedTemplate = CategoryTemplate.entries.find { it.label.equals(entry.category, ignoreCase = true) }
                     ?: CategoryTemplate.LOGIN
                 
@@ -352,7 +361,8 @@ fun AddEntryScreen(
                     secretValue = finalSecret,
                     iconName = iconName,
                     customFields = customFieldsJson,
-                    notes = finalNotes
+                    notes = finalNotes,
+                    userCustomFields = userCustomFields
                 )
             )
         } else {
@@ -364,7 +374,8 @@ fun AddEntryScreen(
                     secretValue = finalSecret,
                     iconName = iconName,
                     customFields = customFieldsJson,
-                    notes = finalNotes
+                    notes = finalNotes,
+                    userCustomFields = userCustomFields
                 )
             )
         }
@@ -1259,12 +1270,134 @@ fun AddEntryScreen(
                     }
                 }
 
+                // ── Advanced Custom Fields ──────────────────────────────────
+                if (userCustomFields.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "CUSTOM FIELDS",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    userCustomFields.forEachIndexed { index, field ->
+                        var localValue by remember(field.id) { mutableStateOf(field.value) }
+                        var isVisible by remember { mutableStateOf(!field.isMasked) }
+                        
+                        OutlinedTextField(
+                            value = localValue,
+                            onValueChange = { newValue ->
+                                localValue = newValue
+                                val list = userCustomFields.toMutableList()
+                                list[index] = field.copy(value = newValue)
+                                userCustomFields = list
+                            },
+                            label = { Text(field.label) },
+                            visualTransformation = if (isVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            trailingIcon = {
+                                Row {
+                                    if (field.isMasked) {
+                                        IconButton(onClick = { isVisible = !isVisible }) {
+                                            Icon(
+                                                imageVector = if (isVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                                contentDescription = "Toggle visibility"
+                                            )
+                                        }
+                                    }
+                                    IconButton(onClick = {
+                                        val list = userCustomFields.toMutableList()
+                                        list.removeAt(index)
+                                        userCustomFields = list
+                                    }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Delete field", tint = MaterialTheme.colorScheme.error)
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    }
+                }
+
+                Button(
+                    onClick = { showAddCustomFieldDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Add Custom Field", fontWeight = FontWeight.Bold)
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             // Floating Action Button replaces sticky bottom save button
             Spacer(modifier = Modifier.height(72.dp))
         }
+    }
+
+    if (showAddCustomFieldDialog) {
+        AlertDialog(
+            onDismissRequest = { 
+                showAddCustomFieldDialog = false
+                newCustomFieldLabel = ""
+                newCustomFieldMasked = false 
+            },
+            title = { Text("Add Custom Field") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = newCustomFieldLabel,
+                        onValueChange = { newCustomFieldLabel = it },
+                        label = { Text("Field Name (e.g., API Key)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 8.dp).fillMaxWidth().clickable { newCustomFieldMasked = !newCustomFieldMasked }
+                    ) {
+                        Checkbox(
+                            checked = newCustomFieldMasked,
+                            onCheckedChange = { newCustomFieldMasked = it }
+                        )
+                        Text("Mask Value (Hide like password)")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newCustomFieldLabel.isNotBlank()) {
+                            userCustomFields = userCustomFields + app.istrid.vaultkeep.data.model.CustomField(
+                                label = newCustomFieldLabel.trim(),
+                                value = "",
+                                isMasked = newCustomFieldMasked
+                            )
+                        }
+                        showAddCustomFieldDialog = false
+                        newCustomFieldLabel = ""
+                        newCustomFieldMasked = false
+                    }
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showAddCustomFieldDialog = false
+                    newCustomFieldLabel = ""
+                    newCustomFieldMasked = false 
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     if (showDeleteConfirmDialog) {

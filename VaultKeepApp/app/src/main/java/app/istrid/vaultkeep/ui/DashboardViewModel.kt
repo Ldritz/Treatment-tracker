@@ -19,12 +19,16 @@ enum class SortOrder { ALPHABETICAL, RECENT }
 
 class DashboardViewModel(
     private val repository: VaultRepository,
+    private val settingsRepository: app.istrid.vaultkeep.data.repository.SettingsRepository,
     private val context: Context
 ) : ViewModel() {
 
     private val _allEntries = MutableStateFlow<List<VaultEntry>>(emptyList())
     private val _selectedCategory = MutableStateFlow<String?>(null) // null = All
     val selectedCategory: StateFlow<String?> = _selectedCategory
+
+    val unsavedChangesCount: StateFlow<Int> = settingsRepository.unsavedChangesCount
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     private val _sortOrder = MutableStateFlow(SortOrder.RECENT)
     val sortOrder: StateFlow<SortOrder> = _sortOrder
@@ -110,6 +114,7 @@ class DashboardViewModel(
     fun insertEntry(entry: VaultEntry) {
         viewModelScope.launch {
             repository.insertEntry(entry)
+            settingsRepository.incrementUnsavedChanges()
         }
     }
 
@@ -120,6 +125,7 @@ class DashboardViewModel(
     fun updateEntry(entry: VaultEntry) {
         viewModelScope.launch {
             repository.updateEntry(entry)
+            settingsRepository.incrementUnsavedChanges()
         }
     }
 
@@ -132,6 +138,7 @@ class DashboardViewModel(
     fun deleteEntry(entry: VaultEntry) {
         viewModelScope.launch {
             repository.deleteEntry(entry)
+            settingsRepository.incrementUnsavedChanges()
         }
     }
 }

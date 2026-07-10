@@ -18,7 +18,16 @@ data class VaultEntry(
     val iconName: String = "",
     val contactNumbers: String? = null,
     val customFields: String = "{}",
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val userCustomFields: List<CustomField> = emptyList()
+)
+
+@Serializable
+data class CustomField(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val label: String,
+    val value: String,
+    val isMasked: Boolean
 )
 
 @Serializable

@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -48,6 +50,10 @@ import java.util.Calendar
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import androidx.compose.ui.layout.ContentScale
+import android.os.Build
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import app.istrid.vaultkeep.utils.WifiConnector
 
 fun calculateAge(dobString: String): String {
     if (dobString.isBlank()) return "N/A"
@@ -131,6 +137,9 @@ fun DashboardScreen(
     val profile by profileViewModel.profile.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val reusedPasswords by viewModel.reusedPasswords.collectAsStateWithLifecycle()
+    val unsavedChangesCount by viewModel.unsavedChangesCount.collectAsStateWithLifecycle()
+    
+    var dismissedAtCount by remember { mutableStateOf(0) }
     
     val clipboardHelper: ClipboardManagerHelper = koinInject()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -162,173 +171,352 @@ fun DashboardScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // ─── Basic Info Header Card ───────────────────────────────────────────
-            ElevatedCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
+            // ─── Auto-Backup Banner ──────────────────────────────────────────────────
+            if (unsavedChangesCount >= 5 && unsavedChangesCount > dismissedAtCount) {
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .clickable { onNavigateToBackup() },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
                 ) {
-                    val initials = if (profile.fullName.isNotBlank()) {
-                        profile.fullName.split(" ")
-                            .filter { it.isNotBlank() }
-                            .take(2)
-                            .map { it.first().uppercase() }
-                            .joinToString("")
-                    } else "EB"
-
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(end = 48.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                    Row(
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Warning",
+                            tint = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "You have made $unsavedChangesCount changes since your last backup. Tap here to export.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(
+                            onClick = { dismissedAtCount = unsavedChangesCount },
+                            modifier = Modifier.size(24.dp)
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Dismiss",
+                                tint = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ─── Glassmorphic Floating Profile Hub ───────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp, bottom = 8.dp)
+            ) {
+                val initials = if (profile.fullName.isNotBlank()) {
+                    profile.fullName.split(" ")
+                        .filter { it.isNotBlank() }
+                        .take(2)
+                        .map { it.first().uppercase() }
+                        .joinToString("")
+                } else "??"
+
+                // ── Identity Row ──────────────────────────────────────────────
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 40.dp)
+                    ) {
+                        // Thin-outlined initials badge
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .border(
+                                    width = 1.5.dp,
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                    shape = CircleShape
+                                )
+                                .clip(CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = initials,
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        // Name + Subtitle stack
+                        Column {
+                            Text(
+                                text = profile.fullName.ifBlank { "Your Name" },
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            )
+                            Text(
+                                text = "\uD83D\uDEE1\uFE0F Secured Vault Owner",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                                )
+                            )
+                        }
+                    }
+
+                    // Borderless pencil edit at far right
+                    IconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onNavigateToProfileEdit()
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Profile",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // ── Frosted-Glass Data Capsule ────────────────────────────────
+                val ageStr = calculateAge(profile.dateOfBirth)
+                val heightStr = profile.height.ifBlank { "—" }
+                val weightStr = profile.weight.ifBlank { "—" }
+                val dobStr = profile.dateOfBirth.ifBlank { "—" }
+
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.06f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 14.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Value on top, label on bottom — 4 equal columns
+                        @Composable
+                        fun CapsuleMetric(value: String, label: String, showDivider: Boolean = true) {
+                            if (showDivider) {
                                 Box(
                                     modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = initials,
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                                        )
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
+                                        .width(1.dp)
+                                        .height(32.dp)
+                                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                                )
+                            }
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f)
+                            ) {
                                 Text(
-                                    text = profile.fullName.ifBlank { "Eldritz Lloyd Bermudes Olesco" },
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    text = value,
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                )
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                    )
                                 )
                             }
                         }
-                        
-                        IconButton(
-                            onClick = { 
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onNavigateToProfileEdit()
-                            },
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .background(MaterialTheme.colorScheme.surface, CircleShape)
-                                .size(36.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Profile",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    val displayDob = profile.dateOfBirth.ifBlank { "N/A" }
-                    val displayHeight = profile.height.ifBlank { "N/A" } + " cm"
-                    val displayWeight = profile.weight.ifBlank { "N/A" } + " kg"
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text("DOB", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha=0.6f))
-                            Text(displayDob, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        }
-                        Column {
-                            Text("AGE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha=0.6f))
-                            Text(calculateAge(profile.dateOfBirth), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        }
-                        Column {
-                            Text("HEIGHT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha=0.6f))
-                            Text(displayHeight, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        }
-                        Column {
-                            Text("WEIGHT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha=0.6f))
-                            Text(displayWeight, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        }
-                    }
-
-                    // Profile Custom Fields / Show More triggers (Plaintext, No Eye-Toggles)
-                    if (customFields.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        HorizontalDivider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { isProfileExpanded = !isProfileExpanded }
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = if (isProfileExpanded) "Show Less" else "Show More",
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                text = ageStr,
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            val chevronRotation by animateFloatAsState(if (isProfileExpanded) 180f else 0f)
-                            Icon(
-                                imageVector = Icons.Default.ExpandMore,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .graphicsLayer(rotationZ = chevronRotation)
+                            Text(
+                                text = "yrs old",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
                             )
                         }
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        AnimatedVisibility(
-                            visible = isProfileExpanded,
-                            enter = expandVertically() + fadeIn(),
-                            exit = shrinkVertically() + fadeOut()
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(32.dp)
+                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            Text(
+                                text = if (heightStr == "—") heightStr else "$heightStr cm",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            )
+                            Text(
+                                text = "Height",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(32.dp)
+                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = if (weightStr == "—") weightStr else "$weightStr kg",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            )
+                            Text(
+                                text = "Weight",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(32.dp)
+                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = dobStr,
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            )
+                            Text(
+                                text = "DOB",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // ── Footer: View Identity Documents link ─────────────────────
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            isProfileExpanded = !isProfileExpanded
+                        }
+                        .padding(vertical = 6.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "\uD83D\uDCD1 View Identity Documents",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    val chevronRotation by animateFloatAsState(if (isProfileExpanded) 90f else 0f)
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(16.dp)
+                            .graphicsLayer(rotationZ = chevronRotation)
+                    )
+                }
+
+                // ── Expanded custom fields ────────────────────────────────────
+                AnimatedVisibility(
+                    visible = isProfileExpanded && customFields.isNotEmpty(),
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                        Spacer(modifier = Modifier.height(4.dp))
+                        customFields.forEach { (key, data) ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                customFields.forEach { (key, data) ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = key,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
-                                            )
-                                            Text(
-                                                text = data.value,
-                                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                                            )
-                                        }
-                                    }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = key,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                        )
+                                    )
+                                    Text(
+                                        text = data.value,
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onBackground
+                                        )
+                                    )
                                 }
                             }
                         }
@@ -607,6 +795,7 @@ fun DashboardScreen(
 
         val isWifiOnly = gatewayIp.isBlank() && adminUsername.isBlank() && adminPassword.isBlank()
         val cobaltBlueColor = Color(0xFF5383E8)
+        val context = LocalContext.current
 
         Dialog(
             onDismissRequest = { activeOverlayRouterEntry = null },
@@ -662,7 +851,8 @@ fun DashboardScreen(
                             if (qrBitmap != null) {
                                 Box(
                                     modifier = Modifier
-                                        .size(240.dp)
+                                        .fillMaxWidth(0.75f)
+                                        .aspectRatio(1f)
                                         .clip(RoundedCornerShape(16.dp))
                                         .background(Color.White)
                                         .padding(16.dp),
@@ -709,25 +899,44 @@ fun DashboardScreen(
                                     }
                                 }
                             }
+
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(
+                                    onClick = {
+                                        val success = WifiConnector.suggestNetwork(context, ssid, password, securityType)
+                                        val msg = if (success) "Wi-Fi suggestion sent to OS" else "Failed to suggest Wi-Fi"
+                                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = cobaltBlueColor)
+                                ) {
+                                    Text("Connect to Wi-Fi", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color.White)
+                                }
+                            }
                         } else {
                             val qrContent = remember(ssid, securityType, password) {
                                 formatWifiQr(ssid, securityType, password)
                             }
                             val qrBitmap = remember(qrContent) { generateQrCodeBitmap(qrContent) }
                             
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(20.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            val scrollState = rememberScrollState()
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .verticalScroll(scrollState),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Column(
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.fillMaxWidth(),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     if (qrBitmap != null) {
                                         Box(
                                             modifier = Modifier
-                                                .size(140.dp)
+                                                .fillMaxWidth(0.65f)
+                                                .aspectRatio(1f)
                                                 .clip(RoundedCornerShape(12.dp))
                                                 .background(Color.White)
                                                 .padding(12.dp),
@@ -749,9 +958,12 @@ fun DashboardScreen(
                                     )
                                 }
                                 
+                                Spacer(modifier = Modifier.height(24.dp))
+                                
                                 Column(
-                                    modifier = Modifier.weight(1.1f),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    horizontalAlignment = Alignment.Start
                                 ) {
                                     Text(
                                         text = "ADMIN PORTAL",
@@ -809,6 +1021,22 @@ fun DashboardScreen(
                                     ) {
                                         Text("🌐 Open Portal", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = Color.White)
                                     }
+
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Button(
+                                            onClick = {
+                                                val success = WifiConnector.suggestNetwork(context, ssid, password, securityType)
+                                                val msg = if (success) "Wi-Fi suggestion sent to OS" else "Failed to suggest Wi-Fi"
+                                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                                        ) {
+                                            Text("Connect to Wi-Fi", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = Color.White)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -831,7 +1059,7 @@ fun VaultEntryCard(
     onCardClick: () -> Unit,
     isPinned: Boolean
 ) {
-    var isRevealed by remember { mutableStateOf(false) }
+    var isExpanded by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
     val clipboardHelper: ClipboardManagerHelper = koinInject()
@@ -872,7 +1100,11 @@ fun VaultEntryCard(
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onCardClick() }
+            .animateContentSize()
+            .clickable {
+                isExpanded = !isExpanded
+                onCardClick()
+            }
             .border(
                 width = if (isPinned) 2.dp else 1.dp,
                 color = if (isPinned) accentColor.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant,
@@ -886,356 +1118,373 @@ fun VaultEntryCard(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.Top
+                .padding(16.dp)
         ) {
-            // ─── Leading Icon / Avatar ─────────────────────────────────
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(accentColor.copy(alpha = 0.35f)),
-                contentAlignment = Alignment.Center
+            // HEADER
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
             ) {
-                if (isPerson && avatarUri.isNotBlank() && File(avatarUri).exists()) {
-                    AsyncImage(
-                        model = File(avatarUri),
-                        contentDescription = "Avatar",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    val iconName = if (entry.iconName.isBlank()) {
-                        when (entry.category) {
-                            "ID" -> "CardMembership"
-                            "Login" -> "AccountCircle"
-                            "Card" -> "CreditCard"
-                            "Person" -> "Person"
-                            "Contact" -> "Phone"
-                            "Wi-Fi/Router" -> "Wifi"
-                            else -> "AccountCircle"
-                        }
-                    } else entry.iconName
+                // ─── Leading Icon / Avatar ─────────────────────────────────
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(accentColor.copy(alpha = 0.35f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isPerson && avatarUri.isNotBlank() && File(avatarUri).exists()) {
+                        AsyncImage(
+                            model = File(avatarUri),
+                            contentDescription = "Avatar",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        val iconName = if (entry.iconName.isBlank()) {
+                            when (entry.category) {
+                                "ID" -> "CardMembership"
+                                "Login" -> "AccountCircle"
+                                "Card" -> "CreditCard"
+                                "Person" -> "Person"
+                                "Contact" -> "Phone"
+                                "Wi-Fi/Router" -> "Wifi"
+                                else -> "AccountCircle"
+                            }
+                        } else entry.iconName
 
-                    Icon(
-                        imageVector = iconMap[iconName] ?: Icons.Default.AccountCircle,
-                        contentDescription = null,
-                        tint = accentColor,
-                        modifier = Modifier.size(24.dp)
-                    )
+                        // Fallback icon map handling if needed
+                        Icon(
+                            imageVector = app.istrid.vaultkeep.ui.iconMap?.get(iconName) ?: Icons.Default.AccountCircle,
+                            contentDescription = null,
+                            tint = accentColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                // ─── Header Text and Badges ────────────────────────────────
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = entry.title,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp)
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (isPerson) {
+                                val relColor = when (relationship) {
+                                    "Family" -> Color(0xFF2E7D32)
+                                    "Friend" -> Color(0xFF0288D1)
+                                    "Colleague" -> Color(0xFFF57C00)
+                                    "Emergency Contact" -> Color(0xFFD32F2F)
+                                    else -> Color(0xFF7B1FA2)
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = relColor.copy(alpha = 0.12f),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, relColor.copy(alpha = 0.4f))
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(6.dp)
+                                                .clip(CircleShape)
+                                                .background(relColor)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = relationship.uppercase(),
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 9.sp),
+                                            color = relColor
+                                        )
+                                    }
+                                }
+                            } else {
+                                Surface(
+                                    shape = RoundedCornerShape(50),
+                                    color = accentColor.copy(alpha = 0.12f)
+                                ) {
+                                    Text(
+                                        text = entry.category,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                        color = accentColor,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
+                            // Edit button
+                            IconButton(
+                                onClick = onEdit,
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            // Pin toggle
+                            IconButton(
+                                onClick = onTogglePin,
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (entry.isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                                    contentDescription = if (entry.isPinned) "Unpin" else "Pin",
+                                    tint = if (entry.isPinned) accentColor
+                                           else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.width(14.dp))
+            // ─── Expanded Drop-Down Content ───────────────────────────────
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+                    when {
+                        isPerson -> {
+                            val fullName = customMap["fullName"] ?: entry.title
+                            val dob = customMap["dob"] ?: ""
+                            val address = customMap["address"] ?: ""
 
-            // ─── Content Column ────────────────────────────────────────
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = entry.title,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (isPerson) {
-                            val relColor = when (relationship) {
-                                "Family" -> Color(0xFF2E7D32)
-                                "Friend" -> Color(0xFF0288D1)
-                                "Colleague" -> Color(0xFFF57C00)
-                                "Emergency Contact" -> Color(0xFFD32F2F)
-                                else -> Color(0xFF7B1FA2)
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = relColor.copy(alpha = 0.12f),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, relColor.copy(alpha = 0.4f))
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Box(
+                            if (avatarUri.isNotBlank() && File(avatarUri).exists()) {
+                                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                    AsyncImage(
+                                        model = File(avatarUri),
+                                        contentDescription = "Avatar",
                                         modifier = Modifier
-                                            .size(6.dp)
-                                            .clip(CircleShape)
-                                            .background(relColor)
+                                            .size(80.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                            if (fullName.isNotBlank()) {
+                                DetailRow("Full Name", fullName, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
+                            }
+                            if (dob.isNotBlank()) {
+                                DetailRow("Date of Birth", dob, copyable = false, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
+                            }
+                            if (address.isNotBlank()) {
+                                DetailRow("Address", address, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
+                            }
+                            if (phoneNumbers.isNotEmpty()) {
+                                phoneNumbers.forEach { phone ->
+                                    DetailRow(phone.label.ifBlank { "Phone" }, phone.number, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
+                                }
+                            }
+                        }
+                        isLogin -> {
+                            if (entry.username.isNotBlank()) {
+                                DetailRow("Username/Email", entry.username, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
+                            }
+                            if (entry.secretValue.isNotBlank()) {
+                                MaskedDetailRow("Password", entry.secretValue, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
+                                if (reusedPasswords.contains(entry.secretValue)) {
                                     Text(
-                                        text = relationship.uppercase(),
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 9.sp),
-                                        color = relColor
+                                        text = "⚠️ Reused Password",
+                                        color = MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
                                     )
                                 }
                             }
-                        } else {
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = accentColor.copy(alpha = 0.12f)
-                            ) {
-                                Text(
-                                    text = entry.category,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                    color = accentColor,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                )
+                        }
+                        isCard -> {
+                            val cardNumber = customMap["cardNumber"] ?: ""
+                            val expiry = customMap["expiryDate"] ?: ""
+                            val cvv = customMap["cvv"] ?: entry.secretValue
+
+                            if (cardNumber.isNotBlank()) {
+                                MaskedDetailRow("Card Number", cardNumber, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
+                            }
+                            if (expiry.isNotBlank()) {
+                                DetailRow("Expiry Date", expiry, copyable = false, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
+                            }
+                            if (cvv.isNotBlank()) {
+                                MaskedDetailRow("CVV", cvv, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
                             }
                         }
-                        Spacer(modifier = Modifier.width(6.dp))
-                        IconButton(
-                            onClick = onTogglePin,
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (entry.isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                                contentDescription = if (entry.isPinned) "Unpin" else "Pin",
-                                tint = if (entry.isPinned) accentColor
-                                       else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(16.dp)
-                            )
+                        isWifiRouter -> {
+                            val ssid = customMap["ssid"] ?: ""
+                            val password = customMap["password"] ?: entry.secretValue
+                            
+                            if (ssid.isNotBlank()) {
+                                DetailRow("SSID", ssid, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
+                            }
+                            if (password.isNotBlank()) {
+                                MaskedDetailRow("Password", password, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
+                            }
                         }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Detail display by template
-                when {
-                    isPerson || isContact -> {
-                        // Render phone numbers inline with label pills
-                        if (phoneNumbers.isNotEmpty()) {
-                            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                                val groupedNumbers = remember(phoneNumbers) {
-                                    phoneNumbers.groupBy { it.label.trim() }
-                                }
-                                var isFirstGroup = true
-                                groupedNumbers.forEach { (label, items) ->
-                                    if (!isFirstGroup) {
-                                        HorizontalDivider(
-                                            modifier = Modifier.padding(vertical = 8.dp),
-                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                                            thickness = 0.5.dp
-                                        )
-                                    }
-                                    isFirstGroup = false
-                                    Column(modifier = Modifier.fillMaxWidth()) {
-                                        if (label.isNotBlank()) {
-                                            Surface(
-                                                shape = RoundedCornerShape(50.dp),
-                                                color = accentColor.copy(alpha = 0.12f),
-                                                modifier = Modifier.padding(bottom = 6.dp)
-                                            ) {
-                                                Text(
-                                                    text = label,
-                                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                                    color = accentColor,
-                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                                )
-                                            }
-                                        }
-                                        items.forEach { contactNum ->
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 2.dp),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    modifier = Modifier.weight(1f).padding(start = if (label.isNotBlank()) 8.dp else 0.dp)
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Phone,
-                                                        contentDescription = null,
-                                                        tint = accentColor.copy(alpha = 0.6f),
-                                                        modifier = Modifier.size(13.dp)
-                                                    )
-                                                    Spacer(modifier = Modifier.width(8.dp))
-                                                    Text(
-                                                        text = contactNum.number,
-                                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                                                        color = MaterialTheme.colorScheme.onSurface
-                                                    )
-                                                }
-                                                IconButton(
-                                                    onClick = {
-                                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                        clipboardHelper.copySensitiveText("Contact Number", contactNum.number, true)
-                                                    },
-                                                    modifier = Modifier.size(28.dp)
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.ContentCopy,
-                                                        contentDescription = "Copy number",
-                                                        tint = accentColor,
-                                                        modifier = Modifier.size(14.dp)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
+                        isID -> {
+                            val idNum = customMap["idNumber"] ?: entry.secretValue
+                            if (idNum.isNotBlank()) {
+                                MaskedDetailRow("ID Number", idNum, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
+                            }
+                        }
+                        isContact -> {
+                            if (phoneNumbers.isNotEmpty()) {
+                                phoneNumbers.forEach { phone ->
+                                    DetailRow(phone.label.ifBlank { "Phone" }, phone.number, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
                                 }
                             }
                         }
+                    }
 
-                        // Display truncated notes
-                        if (entry.notes.isNotBlank()) {
-                            val truncatedNotes = if (entry.notes.length > 40) entry.notes.take(40) + "..." else entry.notes
-                            Text(
-                                text = truncatedNotes,
-                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
-                    }
-                    isWifiRouter -> {
-                        val ssid = customMap["ssid"] ?: ""
-                        Row {
-                            Text(
-                                text = "SSID: ",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
-                            Text(
-                                text = ssid,
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                        val gatewayIp = customMap["gatewayIp"] ?: ""
-                        if (gatewayIp.isNotBlank()) {
-                            Row {
-                                Text(
-                                    text = "🌐 GATEWAY: ",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                )
-                                Text(
-                                    text = gatewayIp,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
+                    // ─── Custom Fields Integration ─────────────────────────────
+                    if (entry.userCustomFields.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider(
+                            modifier = Modifier.padding(bottom = 8.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                            thickness = 0.5.dp
+                        )
+                        entry.userCustomFields.forEach { field ->
+                            if (field.isMasked) {
+                                MaskedDetailRow(field.label, field.value, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
+                            } else {
+                                DetailRow(field.label, field.value, copyable = true, clipboardHelper = clipboardHelper, haptic = haptic, accentColor = accentColor)
                             }
                         }
-                    }
-                    isLogin -> {
-                        if (entry.username.isNotBlank()) {
-                            Text(
-                                text = entry.username,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        val displaySecret = if (isRevealed) entry.secretValue else "••••••••"
-                        Text(
-                            text = displaySecret,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                letterSpacing = if (isRevealed) 0.sp else 1.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        )
-                        if (reusedPasswords.contains(entry.secretValue)) {
-                            Text(
-                                text = "⚠️ Reused Password",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                            )
-                        }
-                    }
-                    isCard -> {
-                        val number = customMap["cardNumber"] ?: ""
-                        val displayNum = if (isRevealed) number else "•••• •••• •••• " + number.takeLast(4)
-                        Text(
-                            text = displayNum,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                letterSpacing = if (isRevealed) 0.sp else 1.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        val expiry = customMap["expiryDate"] ?: ""
-                        if (expiry.isNotBlank()) {
-                            Row {
-                                Text(
-                                    text = "EXP: ",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                )
-                                Text(
-                                    text = expiry,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-                    }
-                    isID -> {
-                        val idNum = customMap["idNumber"] ?: ""
-                        val displayId = if (isRevealed) idNum else "••••••••"
-                        Text(
-                            text = displayId,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                letterSpacing = if (isRevealed) 0.sp else 1.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
                     }
                 }
+            }
+        }
+    }
+}
 
-                Spacer(modifier = Modifier.height(10.dp))
+@Composable
+fun DetailRow(
+    label: String,
+    value: String,
+    copyable: Boolean,
+    clipboardHelper: ClipboardManagerHelper,
+    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
+    accentColor: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        }
+        if (copyable) {
+            IconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    clipboardHelper.copySensitiveText(label, value, true)
+                },
+                modifier = Modifier.size(28.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = "Copy $label",
+                    modifier = Modifier.size(14.dp),
+                    tint = accentColor
+                )
+            }
+        }
+    }
+}
 
-                // Actions
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
+@Composable
+fun MaskedDetailRow(
+    label: String,
+    value: String,
+    copyable: Boolean,
+    clipboardHelper: ClipboardManagerHelper,
+    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
+    accentColor: Color
+) {
+    var isRevealed by remember { mutableStateOf(false) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+            )
+            val displayValue = if (isRevealed) value else "••••••••"
+            Text(
+                text = displayValue,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = if (isRevealed) 0.sp else 1.5.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                onClick = { isRevealed = !isRevealed },
+                modifier = Modifier.size(28.dp)
+            ) {
+                Icon(
+                    imageVector = if (isRevealed) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = "Toggle visibility",
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (copyable) {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        clipboardHelper.copySensitiveText(label, value, true)
+                    },
+                    modifier = Modifier.size(28.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = onEdit,
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                        modifier = Modifier.height(32.dp)
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(14.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Edit", style = MaterialTheme.typography.labelSmall)
-                    }
-                    
-                    if (!isPerson && !isContact) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        TextButton(
-                            onClick = { isRevealed = !isRevealed },
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                            modifier = Modifier.height(32.dp)
-                        ) {
-                            Icon(if (isRevealed) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(14.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(if (isRevealed) "Hide" else "View", style = MaterialTheme.typography.labelSmall)
-                        }
-                        
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = onCopy,
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                            modifier = Modifier.height(32.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = accentColor,
-                                contentColor = Color.White
-                            )
-                        ) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(14.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Copy", style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = "Copy $label",
+                        modifier = Modifier.size(14.dp),
+                        tint = accentColor
+                    )
                 }
             }
         }

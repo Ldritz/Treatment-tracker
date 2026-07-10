@@ -21,6 +21,7 @@ import kotlinx.serialization.decodeFromString
 
 class ProfileViewModel(
     private val repository: VaultRepository,
+    private val settingsRepository: app.istrid.vaultkeep.data.repository.SettingsRepository,
     private val context: Context
 ) : ViewModel() {
 
@@ -42,6 +43,7 @@ class ProfileViewModel(
         _profile.value = updated
         viewModelScope.launch {
             repository.saveProfile(updated)
+            settingsRepository.incrementUnsavedChanges()
         }
     }
 
